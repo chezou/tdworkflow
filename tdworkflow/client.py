@@ -1,15 +1,15 @@
 import os
-
-from typing import Dict, Optional, List, Union
+from typing import Dict, List, Optional, Union
 
 import requests
-from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 from requests.exceptions import HTTPError
+from urllib3.util.retry import Retry
 
-from .workflow import Workflow
-from .project import Project
 import tdworkflow
+
+from .project import Project
+from .workflow import Workflow
 
 
 class WorkflowAPI:
@@ -66,7 +66,9 @@ class ProjectAPI:
 
         return self.project_workflows(projects[0].id)
 
-    def set_secrets(self, project: Union[int, Project], secrets: Dict[str, str]) -> bool:
+    def set_secrets(
+        self, project: Union[int, Project], secrets: Dict[str, str]
+    ) -> bool:
         """Set project secrets
 
         :param project: Project ID or Project object
@@ -151,7 +153,13 @@ class ProjectAPI:
 
 
 class Client(WorkflowAPI, ProjectAPI):
-    def __init__(self, site: str, apikey: Optional[str] = None, user_agent: Optional[str] = None, _session: Optional[requests.Session] = None) -> None:
+    def __init__(
+        self,
+        site: str,
+        apikey: Optional[str] = None,
+        user_agent: Optional[str] = None,
+        _session: Optional[requests.Session] = None,
+    ) -> None:
         """Treasure Workflow REST API client
 
         :param site: Site for Treasure Workflow. {"us", "eu01", "jp"}
@@ -189,14 +197,16 @@ class Client(WorkflowAPI, ProjectAPI):
         if _session is None:
             _session = requests.Session()
             user_agent = user_agent or f"tdworkflow/{tdworkflow.__version__}"
-            _session.headers.update({"Authorization": f"TD1 {self.apikey}", "User-Agent": user_agent})
+            _session.headers.update(
+                {"Authorization": f"TD1 {self.apikey}", "User-Agent": user_agent}
+            )
 
-        retries = Retry(total=5,
-                        backoff_factor=1,
-                        status_forcelist=[500, 502, 503, 504])
+        retries = Retry(
+            total=5, backoff_factor=1, status_forcelist=[500, 502, 503, 504]
+        )
 
-        _session.mount('https://', HTTPAdapter(max_retries=retries))
-        _session.mount('http://', HTTPAdapter(max_retries=retries))
+        _session.mount("https://", HTTPAdapter(max_retries=retries))
+        _session.mount("http://", HTTPAdapter(max_retries=retries))
 
         self._session = _session
         self.api_base = f"https://{self.endpoint}/api/"
