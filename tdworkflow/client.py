@@ -1,6 +1,9 @@
 import gzip
 import io
 import os
+import uuid
+import json
+import time
 from typing import Dict, List, Optional, Union, Tuple, BinaryIO, Any
 from datetime import datetime, timezone, timedelta
 
@@ -17,6 +20,7 @@ from .attempt import Attempt
 from .schedule import Schedule, ScheduleAttempt
 from .session import Session
 from .log import LogFile
+from .util import archive_files
 
 
 class WorkflowAPI:
@@ -73,6 +77,29 @@ class ProjectAPI:
             return [Workflow(**wf) for wf in res["workflows"]]
         else:
             return []
+
+    def create_project(
+            self,
+            project_name: str,
+            target_dir: str,
+            exclude_patterns: Optional[List[str]] = None,
+            revision: Optional[str] = None
+    ) -> Project:
+        revision = revision or str(uuid.uuid4())
+        params = {"project": project_name, "revision": revision}
+
+        default_excludes = ["venv", ".venv", "__pycache__", ".egg-info", ".digdag"]
+        if exclude_patterns:
+            exclude_patterns.extend(default_excludes)
+        else:
+            exclude_patterns = default_excludes
+        data = archive_files(target_dir, exclude_patterns)
+        r = self.put("projects", params=params, data=data)
+
+        if r:
+            return Project(**r)
+        else:
+            raise ValueError("Unable to crate project")
 
     def delete_project(
             self, project: Union[int, Project]
@@ -322,10 +349,10 @@ class AttemptAPI:
         return Attempt(**r)
 
     def retried_attempts(self, attempt: Union[int, Attempt]) -> List[Attempt]:
-        """
+        """Get retried attempt list
 
-        :param attempt:
-        :return:
+        :param attempt: Attempt id or Attempt object
+        :return: List of Attempt
         """
 
         attempt_id = attempt.id if isinstance(attempt, Attempt) else attempt
@@ -340,6 +367,14 @@ class AttemptAPI:
             retry_attempt_name: Optional[str] = None,
             workflow_params: Optional[Dict[str, Any]] = None
     ) -> Attempt:
+        """Start workflow session
+
+        :param workflow: Workflow id or Workflow object
+        :param session_time: Session time, optional
+        :param retry_attempt_name: Retry attempt name, optional
+        :param workflow_params: Extra workflow parameters
+        :return:
+        """
         workflow_id = workflow.id if isinstance(workflow, Workflow) else workflow
         _params = {"workflowId": workflow_id}
         workflow_params = workflow_params if workflow_params else {}
@@ -351,22 +386,45 @@ class AttemptAPI:
             _params.update({"retryAttemptName": retry_attempt_name})
 
         _params["sessionTime"] = session_time
-        r = self.put("attempts", body=_params)
+        r = self.put("attempts", _json=_params)
         if r:
             return Attempt(**r)
         else:
             raise ValueError("Unable to start attempt")
 
-    def kill_attempt(self, attempt_id: int) -> bool:
+    def kill_attempt(
+            self, attempt: Union[int, Attempt]
+    ) -> bool:
         """Kill a session
 
-        :param attempt_id: Attempt ID
-        :type attempt_id: int
+        :param attempt: Attempt ID or Attempt object
+        :type attempt: Union[int, Attempt]
         :return: ``True`` if succeeded
         :rtype: bool
         """
+        attempt_id = attempt.id if isinstance(attempt, Attempt) else attempt
         r = self.post(f"attempts/{attempt_id}/kill")
         return r
+
+    def wait_attempt(
+            self,
+            attempt: Union[int, Attempt],
+            wait_interval: int = 5
+    ) -> Attempt:
+        """Wait until an attempt finished
+
+        :param attempt: Attempt ID or Attempt object
+        :type attempt: Union[int, Attempt]
+        :param wait_interval: Wait interval in second. Default 5 sec
+        :type wait_interval: int
+        :return: Latest status of Attempt
+        :rtype: Attempt
+        """
+        while not attempt.done:
+            time.sleep(wait_interval)
+            attempt = self.attempt(attempt)
+
+        return attempt
 
 
 class ScheduleAPI:
@@ -666,7 +724,9 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         r = self.http.get(url, params=params)
 
         if not 200 <= r.status_code < 300:
-            raise
+            if len(r.text) > 0:
+                print(r.json())
+            raise r.raise_for_status()
         elif content:
             return r.content
         else:
@@ -682,11 +742,12 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         :return: ``True`` if succeeded
         """
         url = f"{self.api_base}{path}"
-        headers = {"content-type": "application/json"}
-        r = self.http.post(url, json=body, headers=headers)
+        r = self.http.post(url, json=body)
 
         if not 200 <= r.status_code < 300:
-            raise
+            if len(r.text) > 0:
+                print(r.json())
+            raise r.raise_for_status()
         else:
             return r.json()
 
@@ -694,27 +755,35 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
             self,
             path: str,
             data: Optional[Union[Dict, List[Tuple], BinaryIO]] = None,
-            json: Optional[Dict[str, str]] = None
+            _json: Optional[Dict[str, str]] = None,
+            params: Optional[Dict[str, str]] = None,
     ) -> Optional[Dict[str, str]]:
         """PUT operator for REST API
 
         :param path: Treasure Workflow API path
         :type path: str
         :param data: Content body
-        :type data:
-        :param json: Content body as JSON
-        :type json: Optional[Dict[str, str]], optional
+        :type data: Optional[Union[Dict, List[Tuple], BinaryIO]], oprional
+        :param _json: Content body as JSON
+        :type _json: Optional[Dict[str, str]], optional
+        :param params: Query parameters
+        :type params: Optional[Dict[str, str]], optional
         :return: Response content
         :rtype: Dict[str,str]
         """
         url = f"{self.api_base}{path}"
         headers = {}
-        if not json and data and hasattr(data, "read"):
-            headers["Content-Type"] = "application/octet-stream"
+        if _json:
+            headers["Content-Type"] = "application/json"
+            data = json.dumps(_json)
+        if not _json and data and hasattr(data, "read"):
+            headers["Content-Type"] = "application/gzip"
 
-        r = self.http.put(url, data=data, json=json, headers=headers)
+        r = self.http.put(url, data=data, headers=headers, params=params)
 
         if not 200 <= r.status_code < 300:
+            if len(r.text) > 0:
+                print(r.json())
             raise r.raise_for_status()
         else:
             return r.json()
@@ -734,6 +803,8 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         r = self.http.delete(url, params=params)
 
         if not 200 <= r.status_code < 300:
+            if len(r.text) > 0:
+                print(r.json())
             raise r.raise_for_status()
         else:
             return r.json()
