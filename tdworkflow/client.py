@@ -1,6 +1,7 @@
 import gzip
 import io
 import json
+import logging
 import os
 import time
 import uuid
@@ -21,6 +22,8 @@ from .schedule import Schedule, ScheduleAttempt
 from .session import Session
 from .util import archive_files
 from .workflow import Workflow
+
+logger = logging.getLogger(__name__)
 
 
 class WorkflowAPI:
@@ -174,10 +177,10 @@ class ProjectAPI:
         for k, v in secrets.items():
             r = self.put(f"projects/{project_id}/secrets/{k}", body={"value": v})
             if r:
-                print(f"Succeeded to set secret for {k}")
+                logger.info(f"Succeeded to set secret for {k}")
             else:
                 succeeded = False
-                print(f"Failed to set secret for {k}")
+                logger.warning(f"Failed to set secret for {k}")
 
         return succeeded
 
@@ -208,13 +211,13 @@ class ProjectAPI:
         """
         old_secret_keys = self.secrets()
         if key not in old_secret_keys:
-            print(f"Secret key {key} doesn't exist")
+            logger.warning(f"Secret key {key} doesn't exist")
             return False
 
         project_id = project.id if isinstance(project, Project) else project
         r = self.delete(f"projects/{project_id}/secrets/{key}")
         if r:
-            print(f"Succeeded to delete secret: {key}")
+            logger.info(f"Succeeded to delete secret: {key}")
             return True
 
         return False
@@ -700,7 +703,7 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
 
         if not 200 <= r.status_code < 300:
             if len(r.text) > 0:
-                print(r.json())
+                logger.warning(r.json())
             raise r.raise_for_status()
         elif content:
             return r.content
@@ -721,7 +724,7 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
 
         if not 200 <= r.status_code < 300:
             if len(r.text) > 0:
-                print(r.json())
+                logger.warning(r.json())
             raise r.raise_for_status()
         else:
             return r.json()
@@ -758,7 +761,7 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
 
         if not 200 <= r.status_code < 300:
             if len(r.text) > 0:
-                print(r.json())
+                logger.warning(r.json())
             raise r.raise_for_status()
         else:
             return r.json()
@@ -781,7 +784,7 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
 
         if not 200 <= r.status_code < 300:
             if len(r.text) > 0:
-                print(r.json())
+                logger.warning(r.json())
             raise r.raise_for_status()
         else:
             return r.json()

@@ -1,9 +1,12 @@
 import glob
 import io
 import os
+import logging
 import re
 import tarfile
 from typing import List
+
+logger = logging.getLogger(__name__)
 
 
 def archive_files(target_dir: str, exclude_patterns: List[str]) -> io.BytesIO:
@@ -14,7 +17,7 @@ def archive_files(target_dir: str, exclude_patterns: List[str]) -> io.BytesIO:
     with tarfile.open(mode="w:gz", fileobj=_bytes) as tar:
         for fn in glob.glob(os.path.join(target_dir, "**"), recursive=True):
             if not re.search(pattern, fn) and os.path.basename(fn) != "":
-                print(f"Added {fn} as {os.path.basename(fn)}")
+                logger.info(f"Added {fn} as {os.path.basename(fn)}")
                 tar.add(fn, os.path.basename(fn))
 
     _bytes.seek(0)
