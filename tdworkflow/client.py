@@ -1,5 +1,4 @@
 import os
-import pkg_resources
 
 from typing import Dict, Optional, List, Union
 
@@ -10,6 +9,7 @@ from requests.exceptions import HTTPError
 
 from .workflow import Workflow
 from .project import Project
+import tdworkflow
 
 
 class WorkflowAPI:
@@ -188,8 +188,7 @@ class Client(WorkflowAPI, ProjectAPI):
 
         if _session is None:
             _session = requests.Session()
-            version = pkg_resources.get_distribution("tdworkflow").version
-            user_agent = user_agent or f"tdworkflow/{version}"
+            user_agent = user_agent or f"tdworkflow/{tdworkflow.__version__}"
             _session.headers.update({"Authorization": f"TD1 {self.apikey}", "User-Agent": user_agent})
 
         retries = Retry(total=5,

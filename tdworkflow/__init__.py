@@ -1,7 +1,7 @@
 import logging
 import pkg_resources
 
-from . import client, workflow
+from tdworkflow import client, workflow
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
