@@ -7,9 +7,9 @@ from .project import Project
 class Workflow:
     id: int
     name: str
-    project: Project
-    timezone: str
-    config: dict
+    project: Project = None
+    timezone: str = ""
+    config: dict = None
     revision: str = ""
     createdAt: str = ""
     deletedAt: str = ""
@@ -17,7 +17,8 @@ class Workflow:
 
     def __post_init__(self):
         self.id = int(self.id)
-        self.project = Project(**self.project)
+        if self.project:
+            self.project = Project(**self.project)
 
     @property
     def created_at(self):
