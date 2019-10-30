@@ -1,23 +1,27 @@
 import dataclasses
 
-from .project import Project
-
 
 @dataclasses.dataclass
-class Workflow:
+class Project:
     id: int
     name: str
-    project: Project
-    timezone: str
-    config: dict
     revision: str = ""
+    archiveType: str = ""
+    archiveMd5: str = ""
     createdAt: str = ""
     deletedAt: str = ""
     updatedAt: str = ""
 
     def __post_init__(self):
         self.id = int(self.id)
-        self.project = Project(**self.project)
+
+    @property
+    def archive_type(self):
+        return self.archiveType
+
+    @property
+    def archive_md5(self):
+        return self.archive_md5
 
     @property
     def created_at(self):
