@@ -2,7 +2,15 @@
 
 Unofficial Treasure Workflow API client.
 
-```py
+## Installation
+
+```shell script
+pip install git+https://github.com/chezou/tdworkflow.git
+```
+
+## Usage
+
+```python
 import os
 
 from tdworkflow.client import Client
@@ -17,5 +25,5 @@ client.set_secrets(projects[0], secrets)
 
 client.secrets(projects[0])
 # ['td.apikey', 'td.apiserver', "test"]
-wf.delete_secrets(["test", "td.apiserver"])
+client.delete_secrets(projects[0], ["test", "td.apiserver"])
 ```
