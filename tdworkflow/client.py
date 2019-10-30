@@ -1,11 +1,11 @@
 import gzip
 import io
-import os
-import uuid
 import json
+import os
 import time
-from typing import Dict, List, Optional, Union, Tuple, BinaryIO, Any
-from datetime import datetime, timezone, timedelta
+import uuid
+from datetime import datetime, timedelta, timezone
+from typing import Any, BinaryIO, Dict, List, Optional, Tuple, Union
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -13,14 +13,14 @@ from urllib3.util.retry import Retry
 
 import tdworkflow
 
-from .project import Project
-from .workflow import Workflow
-from .revision import Revision
 from .attempt import Attempt
+from .log import LogFile
+from .project import Project
+from .revision import Revision
 from .schedule import Schedule, ScheduleAttempt
 from .session import Session
-from .log import LogFile
 from .util import archive_files
+from .workflow import Workflow
 
 
 class WorkflowAPI:
@@ -49,10 +49,7 @@ class WorkflowAPI:
 
 
 class ProjectAPI:
-    def project(
-            self,
-            project: Union[int, Project]
-    ) -> Project:
+    def project(self, project: Union[int, Project]) -> Project:
         project_id = project.id if isinstance(project, Project) else project
         r = self.get(f"projects/{project_id}")
         return Project(r.json())
@@ -68,9 +65,7 @@ class ProjectAPI:
         else:
             return []
 
-    def project_workflows(
-            self, project: Union[int, Project]
-    ) -> List[Workflow]:
+    def project_workflows(self, project: Union[int, Project]) -> List[Workflow]:
         project_id = project.id if isinstance(project, Project) else project
         res = self.get(f"projects/{project_id}/workflows")
         if res:
@@ -79,11 +74,11 @@ class ProjectAPI:
             return []
 
     def create_project(
-            self,
-            project_name: str,
-            target_dir: str,
-            exclude_patterns: Optional[List[str]] = None,
-            revision: Optional[str] = None
+        self,
+        project_name: str,
+        target_dir: str,
+        exclude_patterns: Optional[List[str]] = None,
+        revision: Optional[str] = None,
     ) -> Project:
         revision = revision or str(uuid.uuid4())
         params = {"project": project_name, "revision": revision}
@@ -101,9 +96,7 @@ class ProjectAPI:
         else:
             raise ValueError("Unable to crate project")
 
-    def delete_project(
-            self, project: Union[int, Project]
-    ) -> bool:
+    def delete_project(self, project: Union[int, Project]) -> bool:
         project_id = project.id if isinstance(project, Project) else project
         res = self.delete(f"projects/{project_id}")
         if res:
@@ -112,17 +105,17 @@ class ProjectAPI:
             return False
 
     def download_project_archive(
-            self,
-            project: Union[int, Project],
-            file_path: str,
-            revision: Optional[str] = None
+        self,
+        project: Union[int, Project],
+        file_path: str,
+        revision: Optional[str] = None,
     ) -> bool:
         params = {"revision": revision} if revision else {}
         project_id = project.id if isinstance(project, Project) else project
         res = self.get(f"projects/{project_id}/archive", params=params, content=True)
 
         # File will be downloaded as tar.gz format
-        with open(file_path, 'wb') as f:
+        with open(file_path, "wb") as f:
             f.write(res)
 
         return True
@@ -134,10 +127,7 @@ class ProjectAPI:
 
         return self.project_workflows(projects[0].id)
 
-    def project_revisions(
-            self,
-            project: Union[int, Project]
-    ) -> List[Revision]:
+    def project_revisions(self, project: Union[int, Project]) -> List[Revision]:
         project_id = project.id if isinstance(project, Project) else project
         res = self.get(f"projects/{project_id}/revisions")
         if res:
@@ -146,14 +136,16 @@ class ProjectAPI:
             return []
 
     def project_schedules(
-            self,
-            project: Union[int, Project],
-            workflow: Optional[Union[str, Workflow]] = None,
-            last_id: Optional[int] = None
+        self,
+        project: Union[int, Project],
+        workflow: Optional[Union[str, Workflow]] = None,
+        last_id: Optional[int] = None,
     ) -> List[Schedule]:
         params = {}
         if workflow:
-            workflow_name = workflow.name if isinstance(workflow, Workflow) else workflow
+            workflow_name = (
+                workflow.name if isinstance(workflow, Workflow) else workflow
+            )
             params["workflow"] = workflow_name
         if last_id:
             params["last_id"] = last_id
@@ -250,15 +242,17 @@ class ProjectAPI:
         return succeeded
 
     def project_sessions(
-            self,
-            project: Union[int, Project],
-            workflow: Optional[Union[str, Workflow]] = None,
-            last_id: Optional[int] = None,
-            page_size: Optional[int] = None
+        self,
+        project: Union[int, Project],
+        workflow: Optional[Union[str, Workflow]] = None,
+        last_id: Optional[int] = None,
+        page_size: Optional[int] = None,
     ) -> List[Session]:
         params = {}
         if workflow:
-            workflow_name = workflow.name if isinstance(workflow, Workflow) else workflow
+            workflow_name = (
+                workflow.name if isinstance(workflow, Workflow) else workflow
+            )
             params["workflow"] = workflow_name
         if last_id:
             params["last_id"] = last_id
@@ -272,14 +266,16 @@ class ProjectAPI:
             return []
 
     def project_workflows(
-            self,
-            project: Union[int, Project],
-            workflow: Optional[Union[str, Workflow]] = None,
-            revision: Optional[str] = None
+        self,
+        project: Union[int, Project],
+        workflow: Optional[Union[str, Workflow]] = None,
+        revision: Optional[str] = None,
     ) -> List[Workflow]:
         params = {}
         if workflow:
-            workflow_name = workflow.name if isinstance(workflow, Workflow) else workflow
+            workflow_name = (
+                workflow.name if isinstance(workflow, Workflow) else workflow
+            )
             params["workflow"] = workflow_name
         if revision:
             params["revision"] = revision
@@ -293,12 +289,12 @@ class ProjectAPI:
 
 class AttemptAPI:
     def attempts(
-            self,
-            project: Optional[Union[str, Project]] = None,
-            workflow: Optional[Union[str, Workflow]] = None,
-            include_retried: Optional[bool] = None,
-            last_id: Optional[int] = None,
-            page_size: Optional[int] = None
+        self,
+        project: Optional[Union[str, Project]] = None,
+        workflow: Optional[Union[str, Workflow]] = None,
+        include_retried: Optional[bool] = None,
+        last_id: Optional[int] = None,
+        page_size: Optional[int] = None,
     ) -> List[Attempt]:
         """List attempts
 
@@ -320,7 +316,9 @@ class AttemptAPI:
             project_name = project.name if isinstance(project, Project) else project
             params.update({"project": project_name})
         if workflow:
-            workflow_name = workflow.name if isinstance(workflow, Workflow) else workflow
+            workflow_name = (
+                workflow.name if isinstance(workflow, Workflow) else workflow
+            )
             params.upadte({"workflow": workflow_name})
         if include_retried:
             params.update({"include_retried": include_retried})
@@ -361,11 +359,11 @@ class AttemptAPI:
         return res
 
     def start_attempt(
-            self,
-            workflow: Union[int, Workflow],
-            session_time: Optional[str] = None,
-            retry_attempt_name: Optional[str] = None,
-            workflow_params: Optional[Dict[str, Any]] = None
+        self,
+        workflow: Union[int, Workflow],
+        session_time: Optional[str] = None,
+        retry_attempt_name: Optional[str] = None,
+        workflow_params: Optional[Dict[str, Any]] = None,
     ) -> Attempt:
         """Start workflow session
 
@@ -392,9 +390,7 @@ class AttemptAPI:
         else:
             raise ValueError("Unable to start attempt")
 
-    def kill_attempt(
-            self, attempt: Union[int, Attempt]
-    ) -> bool:
+    def kill_attempt(self, attempt: Union[int, Attempt]) -> bool:
         """Kill a session
 
         :param attempt: Attempt ID or Attempt object
@@ -407,9 +403,7 @@ class AttemptAPI:
         return r
 
     def wait_attempt(
-            self,
-            attempt: Union[int, Attempt],
-            wait_interval: int = 5
+        self, attempt: Union[int, Attempt], wait_interval: int = 5
     ) -> Attempt:
         """Wait until an attempt finished
 
@@ -444,12 +438,12 @@ class ScheduleAPI:
             raise ValueError(f"Unable to find schedule id: {schedule_id}")
 
     def backfill_schedule(
-            self,
-            schedule: Union[int, Schedule],
-            from_time: Optional[str] = None,
-            attempt_name: Optional[str] = None,
-            count: Optional[int] = None,
-            dry_run: Optional[bool] = None
+        self,
+        schedule: Union[int, Schedule],
+        from_time: Optional[str] = None,
+        attempt_name: Optional[str] = None,
+        count: Optional[int] = None,
+        dry_run: Optional[bool] = None,
     ) -> ScheduleAttempt:
         params = {}
         if from_time:
@@ -468,10 +462,7 @@ class ScheduleAPI:
         else:
             raise ValueError(f"Unable to backfill for schedule: {schedule_id}")
 
-    def disable_schedule(
-            self,
-            schedule: Union[int, Schedule]
-    ) -> Schedule:
+    def disable_schedule(self, schedule: Union[int, Schedule]) -> Schedule:
         schedule_id = schedule.id if isinstance(schedule, Schedule) else schedule
         r = self.post(f"schedules/{schedule_id}/disable")
         if r:
@@ -479,10 +470,7 @@ class ScheduleAPI:
         else:
             raise ValueError(f"Unable to disable schedule id: {schedule_id}")
 
-    def enable_schedule(
-            self,
-            schedule: Union[int, Schedule]
-    ) -> Schedule:
+    def enable_schedule(self, schedule: Union[int, Schedule]) -> Schedule:
         schedule_id = schedule.id if isinstance(schedule, Schedule) else schedule
         r = self.post(f"schedules/{schedule_id}/enable")
         if r:
@@ -491,12 +479,12 @@ class ScheduleAPI:
             raise ValueError(f"Unable to enable schedule id: {schedule_id}")
 
     def skip_schedule(
-            self,
-            schedule: Union[int, Schedule],
-            from_time: Optional[str] = None,
-            next_time: Optional[str] = None,
-            next_run_time: Optional[str] = None,
-            dry_run: Optional[bool] = False,
+        self,
+        schedule: Union[int, Schedule],
+        from_time: Optional[str] = None,
+        next_time: Optional[str] = None,
+        next_run_time: Optional[str] = None,
+        dry_run: Optional[bool] = False,
     ) -> Schedule:
         params = {}
         if from_time:
@@ -517,7 +505,7 @@ class ScheduleAPI:
 
 class SessionAPI:
     def sessions(
-            self, last_id: Optional[int] = None, page_size: Optional[int] = None
+        self, last_id: Optional[int] = None, page_size: Optional[int] = None
     ) -> List[Session]:
         params = {}
         if last_id:
@@ -531,10 +519,7 @@ class SessionAPI:
         else:
             return []
 
-    def session(
-            self,
-            session: Union[int, Session]
-    ) -> Session:
+    def session(self, session: Union[int, Session]) -> Session:
         session_id = session.id if isinstance(session, Session) else session
         r = self.get(f"sessions/{session_id}")
         if r:
@@ -543,10 +528,10 @@ class SessionAPI:
             raise ValueError(f"Unable to get sesesion id: {session_id}")
 
     def session_attempts(
-            self,
-            session: Union[int, Session],
-            last_id: Optional[int] = None,
-            page_size: Optional[int] = None
+        self,
+        session: Union[int, Session],
+        last_id: Optional[int] = None,
+        page_size: Optional[int] = None,
     ) -> List[Attempt]:
         params = {}
         if last_id:
@@ -564,10 +549,10 @@ class SessionAPI:
 
 class LogAPI:
     def log_files(
-            self,
-            attempt: Union[Attempt, int],
-            task: Optional[str] = None,
-            direct_download: Optional[bool] = None
+        self,
+        attempt: Union[Attempt, int],
+        task: Optional[str] = None,
+        direct_download: Optional[bool] = None,
     ) -> List[LogFile]:
         params = {}
         if task:
@@ -582,26 +567,19 @@ class LogAPI:
         else:
             return []
 
-    def log_file(
-            self,
-            attempt: Union[Attempt, int],
-            file: Union[LogFile, str]
-    ) -> str:
+    def log_file(self, attempt: Union[Attempt, int], file: Union[LogFile, str]) -> str:
 
         attempt_id = attempt.id if isinstance(attempt, Attempt) else attempt
         file_name = file.file_name if isinstance(file, LogFile) else file
         r = self.get(f"logs/{attempt_id}/files/{file_name}", content=True)
         if r:
             gzfile = io.BytesIO(r)
-            with gzip.open(gzfile, 'rt') as f:
+            with gzip.open(gzfile, "rt") as f:
                 return f.read()
         else:
             raise ValueError(f"Unable to get file: {file_name}")
 
-    def logs(
-            self,
-            attempt: Union[Attempt, int]
-    ) -> List[str]:
+    def logs(self, attempt: Union[Attempt, int]) -> List[str]:
         """Get log string for an attempt
 
         :param attempt: Attempt ID or Attempt object
@@ -704,10 +682,7 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         return self._http
 
     def get(
-            self,
-            path: str,
-            params: Optional[Dict[str, str]] = None,
-            content: bool = False
+        self, path: str, params: Optional[Dict[str, str]] = None, content: bool = False
     ) -> Dict[str, str]:
         """GET operator for REST API
 
@@ -752,11 +727,11 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
             return r.json()
 
     def put(
-            self,
-            path: str,
-            data: Optional[Union[Dict, List[Tuple], BinaryIO]] = None,
-            _json: Optional[Dict[str, str]] = None,
-            params: Optional[Dict[str, str]] = None,
+        self,
+        path: str,
+        data: Optional[Union[Dict, List[Tuple], BinaryIO]] = None,
+        _json: Optional[Dict[str, str]] = None,
+        params: Optional[Dict[str, str]] = None,
     ) -> Optional[Dict[str, str]]:
         """PUT operator for REST API
 
@@ -788,7 +763,9 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         else:
             return r.json()
 
-    def delete(self, path: str, params: Optional[Dict[str, str]] = None) -> Optional[Dict[str, str]]:
+    def delete(
+        self, path: str, params: Optional[Dict[str, str]] = None
+    ) -> Optional[Dict[str, str]]:
         """DELETE operator for REST API
 
         :param path: Treasure Workflow API path

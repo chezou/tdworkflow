@@ -1,9 +1,8 @@
 import dataclasses
-
 from typing import Dict
 
-from .workflow import Workflow
 from .project import Project
+from .workflow import Workflow
 
 
 @dataclasses.dataclass

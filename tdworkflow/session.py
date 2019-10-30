@@ -1,8 +1,8 @@
 import dataclasses
 
+from .attempt import Attempt
 from .project import Project
 from .workflow import Workflow
-from .attempt import Attempt
 
 
 @dataclasses.dataclass

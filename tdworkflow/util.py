@@ -1,9 +1,8 @@
-import io
 import glob
+import io
 import os
 import re
 import tarfile
-
 from typing import List
 
 
