@@ -254,10 +254,10 @@ class ProjectAPI:
         project_id = project.id if isinstance(project, Project) else project
 
         for k, v in secrets.items():
-            r = self.put(f"projects/{project_id}/secrets/{k}", _json={"value": v})
-            if r:
+            try:
+                self.put(f"projects/{project_id}/secrets/{k}", _json={"value": v})
                 logger.info(f"Succeeded to set secret for {k}")
-            else:
+            except exceptions.HttpError as e:
                 succeeded = False
                 logger.warning(f"Failed to set secret for {k}")
 
@@ -288,18 +288,19 @@ class ProjectAPI:
         :return: ``True`` if succeeded
         :rtype: bool
         """
-        old_secret_keys = self.secrets()
+        old_secret_keys = self.secrets(project)
         if key not in old_secret_keys:
             logger.warning(f"Secret key {key} doesn't exist")
             return False
 
         project_id = project.id if isinstance(project, Project) else project
-        r = self.delete(f"projects/{project_id}/secrets/{key}")
-        if r:
+        try:
+            self.delete(f"projects/{project_id}/secrets/{key}")
             logger.info(f"Succeeded to delete secret: {key}")
             return True
-
-        return False
+        except exceptions.HttpError as e:
+            logger.warning(f"Failed to delete secret: {key}")
+            return False
 
     def delete_secrets(self, project: Union[int, Project], keys: List[str]) -> bool:
         """Delete multiple secret keys at once
@@ -859,7 +860,8 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         if not 200 <= r.status_code < 300:
             exceptions.raise_response_error(r)
 
-        return r.json()
+        if r.content and "application/json" in r.headers.get("Content-Type", ""):
+            return r.json()
 
     def put(
         self,
@@ -894,7 +896,8 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         if not 200 <= r.status_code < 300:
             exceptions.raise_response_error(r)
 
-        return r.json()
+        if r.content and "application/json" in r.headers.get("Content-Type", ""):
+            return r.json()
 
     def delete(
         self, path: str, params: Optional[Dict[str, str]] = None
@@ -915,4 +918,5 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         if not 200 <= r.status_code < 300:
             exceptions.raise_response_error(r)
 
-        return r.json()
+        if r.content and "application/json" in r.headers.get("Content-Type", ""):
+            return r.json()
