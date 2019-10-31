@@ -254,7 +254,7 @@ class ProjectAPI:
         project_id = project.id if isinstance(project, Project) else project
 
         for k, v in secrets.items():
-            r = self.put(f"projects/{project_id}/secrets/{k}", body={"value": v})
+            r = self.put(f"projects/{project_id}/secrets/{k}", _json={"value": v})
             if r:
                 logger.info(f"Succeeded to set secret for {k}")
             else:
