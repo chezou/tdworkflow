@@ -11,8 +11,9 @@ class Schedule:
     id: int
     project: Project
     workflow: Workflow
+    createdAt: str = ""
     updatedAt: str = ""
-    disableAt: str = ""
+    disabledAt: str = ""
     nextScheduleTime: Dict = None
     nextRunTime: str = ""
 
@@ -20,6 +21,18 @@ class Schedule:
         self.id = int(self.id)
         self.project = Project(**self.project)
         self.workflow = Workflow(**self.workflow)
+
+    @property
+    def created_at(self):
+        return self.createdAt
+
+    @property
+    def updated_at(self):
+        return self.updatedAt
+
+    @property
+    def disabled_at(self):
+        return self.disabledAt
 
 
 @dataclasses.dataclass
@@ -32,5 +45,5 @@ class ScheduleAttempt:
     def __post_init__(self):
         self.id = int(self.id)
         self.attempts = [Attempt(**att) for att in self.attempts]
-        self.project = Project(**self.pro)
+        self.project = Project(**self.project)
         self.workflow = Project(**self.workflow)

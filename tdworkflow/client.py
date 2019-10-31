@@ -63,7 +63,7 @@ class ProjectAPI:
         """
         project_id = project.id if isinstance(project, Project) else project
         r = self.get(f"projects/{project_id}")
-        return Project(r.json())
+        return Project(**r)
 
     def projects(self, name: Optional[str] = None) -> List[Project]:
         """List projects
@@ -192,7 +192,7 @@ class ProjectAPI:
         :return: List of Workflow
         """
         projects = self.projects(project_name)
-        if len(projects) == 0:
+        if not projects == 0:
             raise ValueError(f"Unable to find project name {project_name}")
 
         return self.project_workflows(projects[0].id)
@@ -520,18 +520,18 @@ class ScheduleAPI:
     def backfill_schedule(
         self,
         schedule: Union[int, Schedule],
-        from_time: Optional[str] = None,
-        attempt_name: Optional[str] = None,
+        attempt_name: str,
+        from_time: str,
+        dry_run: bool = False,
         count: Optional[int] = None,
-        dry_run: Optional[bool] = None,
     ) -> ScheduleAttempt:
         """Run or re-run past schedules
 
         :param schedule: Target Schedule id or Schedule object
-        :param from_time: From time
         :param attempt_name: Attempt name
+        :param from_time: From time
+        :param dry_run: Flag for dry run e.g "2019-11-01T06:20:07.000+00:00"
         :param count: Count
-        :param dry_run: Flag for dry run
         :return: ScheduleAttempt
         """
         params = {}
@@ -541,8 +541,7 @@ class ScheduleAPI:
             params["attemptName"] = attempt_name
         if count:
             params["count"] = count
-        if dry_run:
-            params["dryRun"] = dry_run
+        params["dryRun"] = dry_run
 
         schedule_id = schedule.id if isinstance(schedule, Schedule) else schedule
         r = self.post(f"schedules/{schedule_id}/backfill", body=params)
@@ -601,8 +600,7 @@ class ScheduleAPI:
             params["nextTime"] = next_time
         if next_run_time:
             params["nextRunTime"] = next_run_time
-        if dry_run:
-            params["dryRun"] = dry_run
+        params["dryRun"] = dry_run
         schedule_id = schedule.id if isinstance(schedule, Schedule) else schedule
         r = self.post(f"schedules/{schedule_id}/skip", body=params)
         if r:
@@ -629,7 +627,7 @@ class SessionAPI:
 
         r = self.get("sessions", params=params)
         if r:
-            return [Session(**s) for s in r["attempts"]]
+            return [Session(**s) for s in r["sessions"]]
         else:
             return []
 
@@ -747,7 +745,7 @@ class LogAPI:
 class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAPI):
     def __init__(
         self,
-        site: Optional[str] = "us",
+        site: str = "us",
         endpoint: Optional[str] = None,
         apikey: Optional[str] = None,
         user_agent: Optional[str] = None,
@@ -836,6 +834,7 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         """
         url = f"{self.api_base}{path}"
         r = self.http.get(url, params=params)
+        logger.debug(f"{r.status_code}\n{r.content}")
 
         if not 200 <= r.status_code < 300:
             exceptions.raise_response_error(r)
@@ -856,6 +855,7 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         """
         url = f"{self.api_base}{path}"
         r = self.http.post(url, json=body)
+        logger.debug(f"{r.status_code}\n{r.content}")
 
         if not 200 <= r.status_code < 300:
             exceptions.raise_response_error(r)
@@ -892,6 +892,7 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
             headers["Content-Type"] = "application/gzip"
 
         r = self.http.put(url, data=data, headers=headers, params=params)
+        logger.debug(f"{r.status_code}\n{r.content}")
 
         if not 200 <= r.status_code < 300:
             exceptions.raise_response_error(r)
@@ -914,6 +915,7 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         url = f"{self.api_base}{path}"
 
         r = self.http.delete(url, params=params)
+        logger.debug(f"{r.status_code}\n{r.content}")
 
         if not 200 <= r.status_code < 300:
             exceptions.raise_response_error(r)
