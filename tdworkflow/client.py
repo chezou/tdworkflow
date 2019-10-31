@@ -14,6 +14,7 @@ from urllib3.util.retry import Retry
 
 import tdworkflow
 
+from . import exceptions
 from .attempt import Attempt
 from .log import LogFile
 from .project import Project
@@ -68,11 +69,24 @@ class ProjectAPI:
         else:
             return []
 
-    def project_workflows(self, project: Union[int, Project]) -> List[Workflow]:
+    def project_workflows(
+        self,
+        project: Union[int, Project],
+        workflow: Optional[Union[str, Workflow]] = None,
+        revision: Optional[str] = None,
+    ) -> List[Workflow]:
+        params = {}
+        if workflow:
+            workflow_name = (
+                workflow.name if isinstance(workflow, Workflow) else workflow
+            )
+            params["workflow"] = workflow_name
+        if revision:
+            params["revision"] = revision
         project_id = project.id if isinstance(project, Project) else project
-        res = self.get(f"projects/{project_id}/workflows")
-        if res:
-            return [Workflow(**wf) for wf in res["workflows"]]
+        r = self.get(f"projects/{project_id}/workflows", params=params)
+        if r:
+            return [Workflow(**wf) for wf in r["workflows"]]
         else:
             return []
 
@@ -265,27 +279,6 @@ class ProjectAPI:
         r = self.get(f"projects/{project_id}/sessions")
         if r:
             return [Session(**s) for s in r["sessions"]]
-        else:
-            return []
-
-    def project_workflows(
-        self,
-        project: Union[int, Project],
-        workflow: Optional[Union[str, Workflow]] = None,
-        revision: Optional[str] = None,
-    ) -> List[Workflow]:
-        params = {}
-        if workflow:
-            workflow_name = (
-                workflow.name if isinstance(workflow, Workflow) else workflow
-            )
-            params["workflow"] = workflow_name
-        if revision:
-            params["revision"] = revision
-        project_id = project.id if isinstance(project, Project) else project
-        r = self.get(f"projects/{project_id}/workflows", params=params)
-        if r:
-            return [Workflow(**wf) for wf in r["workflows"]]
         else:
             return []
 
@@ -686,26 +679,25 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
 
     def get(
         self, path: str, params: Optional[Dict[str, str]] = None, content: bool = False
-    ) -> Dict[str, str]:
+    ) -> Union[Dict[str, str], bytes]:
         """GET operator for REST API
 
         :param path: Treasure Workflow API path
         :type path: str
         :param params: Query parameters, defaults to None
         :type params: Optional[Dict[str, str]], optional
-        :param content: Return content if ``True``
+        :param content: Return content body without parsing JSON if ``True``
         :type content: bool
-        :return: Response data got with JSON
-        :rtype: Dict[str, str]
+        :return: Response data in JSON or bytes
+        :rtype: Union[Dict[str, str], bytes]
         """
         url = f"{self.api_base}{path}"
         r = self.http.get(url, params=params)
 
         if not 200 <= r.status_code < 300:
-            if len(r.text) > 0:
-                logger.warning(r.json())
-            raise r.raise_for_status()
-        elif content:
+            exceptions.raise_response_error(r)
+
+        if content:
             return r.content
         else:
             return r.json()
@@ -723,11 +715,9 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         r = self.http.post(url, json=body)
 
         if not 200 <= r.status_code < 300:
-            if len(r.text) > 0:
-                logger.warning(r.json())
-            raise r.raise_for_status()
-        else:
-            return r.json()
+            exceptions.raise_response_error(r)
+
+        return r.json()
 
     def put(
         self,
@@ -760,11 +750,9 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         r = self.http.put(url, data=data, headers=headers, params=params)
 
         if not 200 <= r.status_code < 300:
-            if len(r.text) > 0:
-                logger.warning(r.json())
-            raise r.raise_for_status()
-        else:
-            return r.json()
+            exceptions.raise_response_error(r)
+
+        return r.json()
 
     def delete(
         self, path: str, params: Optional[Dict[str, str]] = None
@@ -783,8 +771,6 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         r = self.http.delete(url, params=params)
 
         if not 200 <= r.status_code < 300:
-            if len(r.text) > 0:
-                logger.warning(r.json())
-            raise r.raise_for_status()
-        else:
-            return r.json()
+            exceptions.raise_response_error(r)
+
+        return r.json()

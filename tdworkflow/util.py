@@ -1,7 +1,7 @@
 import glob
 import io
-import os
 import logging
+import os
 import re
 import tarfile
 from typing import List
