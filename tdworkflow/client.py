@@ -31,7 +31,8 @@ class WorkflowAPI:
     def workflows(self) -> List[Workflow]:
         """List worlfows
 
-        :return:
+        :return: List of Workflow
+        :rtype: List[Workflow]
         """
         res = self.get("workflows")
         if len(res) > 0:
@@ -54,11 +55,24 @@ class WorkflowAPI:
 
 class ProjectAPI:
     def project(self, project: Union[int, Project]) -> Project:
+        """Get a project
+
+        :param project: Project id or Project object
+        :type project: Union[int, Project]
+        :return: A Project
+        """
         project_id = project.id if isinstance(project, Project) else project
         r = self.get(f"projects/{project_id}")
         return Project(r.json())
 
     def projects(self, name: Optional[str] = None) -> List[Project]:
+        """List projects
+
+        :param name: Project name
+        :type name: Optional[str], optional
+        :return: List of Project
+        :rtype: List[Project]
+        """
         params = None
         if name:
             params = {"name": name}
@@ -75,6 +89,17 @@ class ProjectAPI:
         workflow: Optional[Union[str, Workflow]] = None,
         revision: Optional[str] = None,
     ) -> List[Workflow]:
+        """Get workflows associated with a project
+
+        :param project: Project id or Project object
+        :type project: Union[int, Project]
+        :param workflow: Workflow name or Workflow object
+        :type project: Optional[Union[str, Workflow]], optional
+        :param revision: Revision name
+        :type revision: Optional[str], optional
+        :return: List of Workflow
+        :rtype: List[Workflow]
+        """
         params = {}
         if workflow:
             workflow_name = (
@@ -97,6 +122,17 @@ class ProjectAPI:
         exclude_patterns: Optional[List[str]] = None,
         revision: Optional[str] = None,
     ) -> Project:
+        """Create a new project
+
+        :param project_name: Project name
+        :param target_dir: Target directory name
+        :param exclude_patterns: Exclude file patterns. They are treated as regexp
+                                 patterns.
+                                 default: ["venv", ".venv", "__pycache__", ".egg-info",\
+                                  ".digdag"]
+        :param revision: Revision name
+        :return:
+        """
         revision = revision or str(uuid.uuid4())
         params = {"project": project_name, "revision": revision}
 
@@ -114,6 +150,11 @@ class ProjectAPI:
             raise ValueError("Unable to crate project")
 
     def delete_project(self, project: Union[int, Project]) -> bool:
+        """Delete a project
+
+        :param project: Project id or Project object
+        :return: ``True`` if succeeded
+        """
         project_id = project.id if isinstance(project, Project) else project
         res = self.delete(f"projects/{project_id}")
         if res:
@@ -127,6 +168,13 @@ class ProjectAPI:
         file_path: str,
         revision: Optional[str] = None,
     ) -> bool:
+        """Download a project and save as a file (tar.gz)
+
+        :param project: Project id or Project object
+        :param file_path: Target file path to be saved in tar.gz
+        :param revision: Revision name
+        :return: ``True`` if succeeded
+        """
         params = {"revision": revision} if revision else {}
         project_id = project.id if isinstance(project, Project) else project
         res = self.get(f"projects/{project_id}/archive", params=params, content=True)
@@ -138,6 +186,11 @@ class ProjectAPI:
         return True
 
     def project_workflows_by_name(self, project_name: str) -> List[Workflow]:
+        """List workflows associate with Project by project name
+
+        :param project_name: Target project name
+        :return: List of Workflow
+        """
         projects = self.projects(project_name)
         if len(projects) == 0:
             raise ValueError(f"Unable to find project name {project_name}")
@@ -145,6 +198,11 @@ class ProjectAPI:
         return self.project_workflows(projects[0].id)
 
     def project_revisions(self, project: Union[int, Project]) -> List[Revision]:
+        """List revisions associated with Project
+
+        :param project: Project id or Project object
+        :return: List of Revision
+        """
         project_id = project.id if isinstance(project, Project) else project
         res = self.get(f"projects/{project_id}/revisions")
         if res:
@@ -158,6 +216,13 @@ class ProjectAPI:
         workflow: Optional[Union[str, Workflow]] = None,
         last_id: Optional[int] = None,
     ) -> List[Schedule]:
+        """List schedules associated with Project
+
+        :param project: Project ID or project object
+        :param workflow: Workflow name or Workflow object
+        :param last_id: Last ID
+        :return: List of Schedule
+        """
         params = {}
         if workflow:
             workflow_name = (
@@ -265,6 +330,14 @@ class ProjectAPI:
         last_id: Optional[int] = None,
         page_size: Optional[int] = None,
     ) -> List[Session]:
+        """List sessions associated with a Project
+
+        :param project: Project ID or Project object
+        :param workflow: Workflow name or Workflow object
+        :param last_id: Last ID
+        :param page_size: Page size
+        :return: List of Session
+        """
         params = {}
         if workflow:
             workflow_name = (
@@ -419,6 +492,11 @@ class AttemptAPI:
 
 class ScheduleAPI:
     def schedules(self, last_id: Optional[int] = None) -> List[Schedule]:
+        """List schedules
+
+        :param last_id: Last ID
+        :return: List of Schedule
+        """
         r = self.get("schedules", params={"last_id": last_id})
         if r:
             return [Schedule(**s) for s in r["schedules"]]
@@ -426,6 +504,11 @@ class ScheduleAPI:
             return []
 
     def schedule(self, schedule: Union[int, Schedule]) -> Schedule:
+        """Get a schedule
+
+        :param schedule: Schedule id or Schedule object
+        :return: Schedule
+        """
         schedule_id = schedule.id if isinstance(schedule, Schedule) else schedule
         r = self.get(f"schedules/{schedule_id}")
         if r:
@@ -441,6 +524,15 @@ class ScheduleAPI:
         count: Optional[int] = None,
         dry_run: Optional[bool] = None,
     ) -> ScheduleAttempt:
+        """Run or re-run past schedules
+
+        :param schedule: Target Schedule id or Schedule object
+        :param from_time: From time
+        :param attempt_name: Attempt name
+        :param count: Count
+        :param dry_run: Flag for dry run
+        :return: ScheduleAttempt
+        """
         params = {}
         if from_time:
             params["fromTime"] = from_time
@@ -459,6 +551,11 @@ class ScheduleAPI:
             raise ValueError(f"Unable to backfill for schedule: {schedule_id}")
 
     def disable_schedule(self, schedule: Union[int, Schedule]) -> Schedule:
+        """Disable a schedule
+
+        :param schedule: Schedule ID or Schedule object
+        :return: New Schedule
+        """
         schedule_id = schedule.id if isinstance(schedule, Schedule) else schedule
         r = self.post(f"schedules/{schedule_id}/disable")
         if r:
@@ -467,6 +564,11 @@ class ScheduleAPI:
             raise ValueError(f"Unable to disable schedule id: {schedule_id}")
 
     def enable_schedule(self, schedule: Union[int, Schedule]) -> Schedule:
+        """Enable a schedule
+
+        :param schedule: Schedule ID or Schedule object
+        :return: New Schedule
+        """
         schedule_id = schedule.id if isinstance(schedule, Schedule) else schedule
         r = self.post(f"schedules/{schedule_id}/enable")
         if r:
@@ -482,6 +584,15 @@ class ScheduleAPI:
         next_run_time: Optional[str] = None,
         dry_run: Optional[bool] = False,
     ) -> Schedule:
+        """Skip schedules forward to a future time
+
+        :param schedule: Schedule ID or Schedule object
+        :param from_time: From time
+        :param next_time: Next time
+        :param next_run_time: NExt run time
+        :param dry_run: Flag for dry run
+        :return: New Schedule
+        """
         params = {}
         if from_time:
             params["fromTime"] = from_time
@@ -503,6 +614,12 @@ class SessionAPI:
     def sessions(
         self, last_id: Optional[int] = None, page_size: Optional[int] = None
     ) -> List[Session]:
+        """List sessions
+
+        :param last_id: Last ID
+        :param page_size: Page size
+        :return: List of Session
+        """
         params = {}
         if last_id:
             params["last_id"] = last_id
@@ -516,6 +633,11 @@ class SessionAPI:
             return []
 
     def session(self, session: Union[int, Session]) -> Session:
+        """Get a session
+
+        :param session: Sesion ID or Session object
+        :return: New Session
+        """
         session_id = session.id if isinstance(session, Session) else session
         r = self.get(f"sessions/{session_id}")
         if r:
@@ -529,6 +651,13 @@ class SessionAPI:
         last_id: Optional[int] = None,
         page_size: Optional[int] = None,
     ) -> List[Attempt]:
+        """Get attempts of a session
+
+        :param session: Session ID or Session object
+        :param last_id: Last ID
+        :param page_size: Page size
+        :return: List of Attempt
+        """
         params = {}
         if last_id:
             params["last_id"] = last_id
@@ -550,6 +679,13 @@ class LogAPI:
         task: Optional[str] = None,
         direct_download: Optional[bool] = None,
     ) -> List[LogFile]:
+        """Get log files information
+
+        :param attempt: Target Attempt id or Attempt object
+        :param task: Task name
+        :param direct_download: Flag for direct download
+        :return: List of LogFile
+        """
         params = {}
         if task:
             params["task"] = task
@@ -564,6 +700,12 @@ class LogAPI:
             return []
 
     def log_file(self, attempt: Union[Attempt, int], file: Union[LogFile, str]) -> str:
+        """Get a log string for an attempt
+
+        :param attempt: Target Attempt id or Attempt object
+        :param file: LogFile name or LogFile object
+        :return: Log string
+        """
 
         attempt_id = attempt.id if isinstance(attempt, Attempt) else attempt
         file_name = file.file_name if isinstance(file, LogFile) else file
@@ -576,7 +718,7 @@ class LogAPI:
             raise ValueError(f"Unable to get file: {file_name}")
 
     def logs(self, attempt: Union[Attempt, int]) -> List[str]:
-        """Get log string for an attempt
+        """Get log string list for an attempt
 
         :param attempt: Attempt ID or Attempt object
         :return: A list of log
