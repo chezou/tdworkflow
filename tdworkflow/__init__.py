@@ -14,8 +14,13 @@ from . import (
     workflow,
 )
 
+try:
+    __version__ = pkg_resources.get_distribution(__name__).version
+except pkg_resources.DistributionNotFound:
+    # package is not installed
+    pass
+
+
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
 logger.setLevel(logging.INFO)
-
-__version__ = pkg_resources.get_distribution(__name__).version

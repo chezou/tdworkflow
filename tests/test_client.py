@@ -15,7 +15,6 @@ from tdworkflow.schedule import Schedule, ScheduleAttempt
 from tdworkflow.session import Session
 from tdworkflow.workflow import Workflow
 
-
 RESP_DATA_GET_0 = {
     "projects": [
         {
