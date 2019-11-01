@@ -751,6 +751,7 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         apikey: Optional[str] = None,
         user_agent: Optional[str] = None,
         _session: Optional[requests.Session] = None,
+        scheme: str = "https",
     ) -> None:
         """Treasure Workflow REST API client
 
@@ -765,6 +766,8 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         :type user_agent: Optional[str], optional
         :param _session: HTTP object to make requests
         :type _session: Optional[requests.Session]
+        :param scheme: URI scheme default: "https"
+        :type scheme: str
         :raises ValueError: If ``site`` is unknown name.
         :raises ValueError: If ``apikey`` is empty and environment variable
                             ``TD_API_KEY`` doesn't exist
@@ -809,7 +812,7 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         _session.mount("http://", HTTPAdapter(max_retries=retries))
 
         self._http = _session
-        self.api_base = f"https://{self.endpoint}/api/"
+        self.api_base = f"{scheme}://{self.endpoint}/api/"
 
     @property
     def http(self):
