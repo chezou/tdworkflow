@@ -5,6 +5,12 @@ Unofficial Treasure Workflow API client.
 ## Installation
 
 ```shell script
+pip install tdworkflow
+```
+
+If you want to use development version, run as follows:
+
+```shell script
 pip install git+https://github.com/chezou/tdworkflow.git
 ```
 
