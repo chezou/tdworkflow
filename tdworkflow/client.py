@@ -722,15 +722,16 @@ class LogAPI:
         :param attempt: Attempt ID or Attempt object
         :return: A list of log
 
-        .. code-block:: python
 
+        .. code-block:: python
+           
            >>> import tdworkflow
            >>> client = tdworkflow.client.Client("us")
            >>> attempts = client.attempts(project="pandas-df")
            >>> logs = client.logs(attempts[0])
            >>> print(logs)
-           ['2019-10-30 08:34:51.672 +0000 [INFO] (0250@[1:pandas-df]+pandas-df+read_into_df) io.digdag.core.agent.OperatorManager: py>: py_scripts.examples.read_td_table\n',
-           '2019-10-30 08:34:59.879 +0000 [INFO] (0237@[1:pandas-df]+pandas-df+read_into_df) io.digdag.core.agent.OperatorManager: py>: py_scripts.examples.read_td_table\nWait running a command task: status provisioning',
+           ['2019-10-30 08:34:51.672 +0000 [INFO] (0250@[1:pandas-df]+pandas-df+read_into_df) io.digdag.core.agent.OperatorManager: py>: py_scripts.examples.read_td_table\\n',
+           '2019-10-30 08:34:59.879 +0000 [INFO] (0237@[1:pandas-df]+pandas-df+read_into_df) io.digdag.core.agent.OperatorManager: py>: py_scripts.examples.read_td_table\\nWait running a command task: status provisioning',
            ...
         """  # noqa
 
