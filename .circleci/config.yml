@@ -1,0 +1,19 @@
+version: 2
+jobs:
+  build:
+    working_directory: ~/repo
+    docker:
+      - image: circleci/python:3.8.0
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            python3 -m venv venv
+            . venv/bin/activate
+            pip install -e .[dev]
+      - run:
+          name: Run test
+          command: |
+            . venv/bin/activate
+            py.test
