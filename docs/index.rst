@@ -11,7 +11,7 @@
    :maxdepth: 2
 
    references/index
-
+   changelog
 
 Indices and tables
 ==================
