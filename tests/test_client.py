@@ -16,28 +16,6 @@ from tdworkflow.session import Session
 from tdworkflow.workflow import Workflow
 
 
-def test_create_client():
-    client = Client(site="us", apikey="APIKEY")
-    assert client.site == "us"
-    assert client.endpoint == "api-workflow.treasuredata.com"
-    assert client.apikey == "APIKEY"
-    assert isinstance(client.http, requests.Session)
-    assert client.http.headers["Authorization"] == "TD1 APIKEY"
-    assert client.http.headers["User-Agent"] == f"tdworkflow/{tdworkflow.__version__}"
-    assert client.api_base == "https://api-workflow.treasuredata.com/api/"
-
-
-def test_create_client_with_endpoint():
-    client = Client(endpoint="digdag.example.com", apikey="APIKEY")
-    assert client.site == "us"
-    assert client.endpoint == "digdag.example.com"
-    assert client.apikey == "APIKEY"
-    assert isinstance(client.http, requests.Session)
-    assert client.http.headers["Authorization"] == "TD1 APIKEY"
-    assert client.http.headers["User-Agent"] == f"tdworkflow/{tdworkflow.__version__}"
-    assert client.api_base == "https://digdag.example.com/api/"
-
-
 RESP_DATA_GET_0 = {
     "projects": [
         {
@@ -226,6 +204,38 @@ def prepare_mock(
         response.raise_for_status.side_effect = side_effect
     if json:
         response.headers = {"Content-Type": "application/json"}
+
+
+def test_create_client():
+    client = Client(site="us", apikey="APIKEY")
+    assert client.site == "us"
+    assert client.endpoint == "api-workflow.treasuredata.com"
+    assert client.apikey == "APIKEY"
+    assert isinstance(client.http, requests.Session)
+    assert client.http.headers["Authorization"] == "TD1 APIKEY"
+    assert client.http.headers["User-Agent"] == f"tdworkflow/{tdworkflow.__version__}"
+    assert client.api_base == "https://api-workflow.treasuredata.com/api/"
+
+
+def test_create_client_with_endpoint():
+    client = Client(endpoint="digdag.example.com", apikey="APIKEY")
+    assert client.site == "us"
+    assert client.endpoint == "digdag.example.com"
+    assert client.apikey == "APIKEY"
+    assert isinstance(client.http, requests.Session)
+    assert client.http.headers["Authorization"] == "TD1 APIKEY"
+    assert client.http.headers["User-Agent"] == f"tdworkflow/{tdworkflow.__version__}"
+    assert client.api_base == "https://digdag.example.com/api/"
+
+
+def test_create_client_with_scheme():
+    session = requests.Session()
+    client = Client(
+        endpoint="localhost:65432", apikey="", _session=session, scheme="http"
+    )
+    assert client.endpoint == "localhost:65432"
+    assert client.api_base == "http://localhost:65432/api/"
+    assert "Authorization" not in client.http.headers
 
 
 class TestProjectAPI:

@@ -115,3 +115,24 @@ You can start workflow session by using ``Client.start_attempt``.
 
    # Wait attempt until finish. This may require few minutes.
    attempt = client.wait_attempt(attempt)
+
+
+Connect to open source digdag
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Since Treasure Workflow is hosted digdag, tdworkflow is compatible with open source digdag.
+
+.. note::
+   Open source digdag API may be different with Treasure Workflow API so that tdworkflow might not work with some API of opensource digdag.
+
+Here is the example code to connect local digdag server.
+
+.. code-block:: python
+
+    >>> import tdworkflow
+    >>> import requests
+    >>> session = requests.Session()
+    >>> client = tdworkflow.client.Client(
+    ... endpoint="localhost:65432", apikey="", _session=session, scheme="http")
+    >>> client.projects()
+    [Project(id=1, name='python-tdworkflow', revision='134fe2f9-ded3-4e7c-af8e-8a82d55d688b', archiveType='db', archiveMd5='5Lc6F6m3DtmBN4DA5MzK8A==', createdAt='2019-11-01T13:03:26Z', deletedAt=None, updatedAt='2019-11-01T13:03:26Z')]
