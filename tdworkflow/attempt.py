@@ -24,8 +24,13 @@ class Attempt:
 
     def __post_init__(self):
         self.id = int(self.id)
-        self.project = Project(**self.project) if self.project else None
-        self.workflow = Workflow(**self.workflow) if self.workflow else None
+        if self.project and isinstance(self.project, dict):
+            self.project = Project(**self.project)
+        if self.workflow and isinstance(self.workflow, dict):
+            self.workflow = Workflow(**self.workflow)
+        self.done = bool(self.done)
+        self.success = bool(self.success)
+        self.cancelRequested = bool(self.cancelRequested)
 
     @property
     def session_id(self):
@@ -53,3 +58,19 @@ class Attempt:
 
     def finished(self):
         return bool(self.finished_at)
+
+    def update(self, **args):
+        other_attempt = Attempt(**args)
+        self.id = other_attempt.id
+        self.sessionId = other_attempt.sessionId
+        self.sessionUuid = other_attempt.sessionUuid
+        self.workflow = other_attempt.workflow
+        self.project = other_attempt.project
+        self.index = other_attempt.index
+        self.retryAttemptName = other_attempt.retryAttemptName
+        self.done = other_attempt.done
+        self.success = other_attempt.success
+        self.cancelRequested = other_attempt.cancelRequested
+        self.params = other_attempt.params
+        self.createdAt = other_attempt.createdAt
+        self.finishedAt = other_attempt.finishedAt

@@ -401,11 +401,14 @@ class AttemptAPI:
         res = [Attempt(**attempt) for attempt in r["attempts"]] if r else []
         return res
 
-    def attempt(self, attempt: Union[int, Attempt]) -> Attempt:
+    def attempt(
+        self, attempt: Union[int, Attempt], inplace: bool = False
+    ) -> Optional[Attempt]:
         """Get an attempt
 
         :param attempt: Attempt ID or Attempt object
         :type attempt: int
+        :param inplace: If True, do operation inplace and return None
         :return: Attempt object
         :rtype: :class:`Attempt`
         """
@@ -414,7 +417,10 @@ class AttemptAPI:
         if not r:
             raise ValueError(f"Unable to find attempt id {attempt_id}")
 
-        return Attempt(**r)
+        if inplace:
+            attempt.update(**r)
+        else:
+            return Attempt(**r)
 
     def retried_attempts(self, attempt: Union[int, Attempt]) -> List[Attempt]:
         """Get retried attempt list
@@ -460,17 +466,23 @@ class AttemptAPI:
         else:
             raise ValueError("Unable to start attempt")
 
-    def kill_attempt(self, attempt: Union[int, Attempt]) -> bool:
+    def kill_attempt(
+        self, attempt: Union[int, Attempt], inplace: bool = False
+    ) -> Optional[Attempt]:
         """Kill a session
 
         :param attempt: Attempt ID or Attempt object
         :type attempt: Union[int, Attempt]
+        :param inplace: If True, do operation inplace and return None
         :return: ``True`` if succeeded
-        :rtype: bool
+        :rtype: Attempt
         """
         attempt_id = attempt.id if isinstance(attempt, Attempt) else attempt
-        r = self.post(f"attempts/{attempt_id}/kill")
-        return r
+        self.post(f"attempts/{attempt_id}/kill", content=True)
+        if inplace:
+            self.attempt(attempt, inplace=True)
+        else:
+            return self.attempt(attempt)
 
     def wait_attempt(
         self, attempt: Union[int, Attempt], wait_interval: int = 5
@@ -486,7 +498,7 @@ class AttemptAPI:
         """
         while not attempt.done:
             time.sleep(wait_interval)
-            attempt = self.attempt(attempt)
+            self.attempt(attempt, inplace=True)
 
         return attempt
 
@@ -848,13 +860,17 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         else:
             return r.json()
 
-    def post(self, path: str, body: Optional[Dict[str, str]] = None) -> bool:
+    def post(
+        self, path: str, body: Optional[Dict[str, str]] = None, content: bool = False
+    ) -> Optional[Union[Dict[str, str], bytes]]:
         """POST operator for REST API
 
         :param path: Treasure Workflow API path
         :type path: str
-        :param body:
+        :param body: Content body in dictionary to be passed in JSON
         :type body: Optional[Dict[str, str]], optional
+        :param content: Return content body without parsing JSON if ``True``
+        :type content: bool
         :return: ``True`` if succeeded
         """
         url = f"{self.api_base}{path}"
@@ -864,7 +880,9 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         if not 200 <= r.status_code < 300:
             exceptions.raise_response_error(r)
 
-        if r.content and "application/json" in r.headers.get("Content-Type", ""):
+        if content:
+            return r.content
+        elif r.content and "application/json" in r.headers.get("Content-Type", ""):
             return r.json()
 
     def put(

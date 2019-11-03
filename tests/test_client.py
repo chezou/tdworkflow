@@ -490,3 +490,47 @@ class TestLogAPI:
         prepare_mock(self.client, mocker, ret_val=file, content=dummy_file.getvalue())
         f = self.client.log_file(attempt_id, file["fileName"])
         assert isinstance(f, str)
+
+
+class TestAttemptAPI:
+    def setup_method(self, method):
+        print("method{}".format(method.__name__))
+        self.client = Client(site="us", apikey="APIKEY")
+
+    def test_attemtps(self, mocker):
+        prepare_mock(self.client, mocker, ret_val=RESP_DATA_GET_6)
+        attempts = self.client.attempts()
+        assert [Attempt(**a) for a in RESP_DATA_GET_6["attempts"]] == attempts
+
+    def test_attempt(self, mocker):
+        attempt = RESP_DATA_GET_6["attempts"][0]
+        prepare_mock(self.client, mocker, ret_val=attempt)
+        assert Attempt(**attempt) == self.client.attempt(attempt["id"])
+
+        attempt2 = copy.deepcopy(RESP_DATA_GET_6["attempts"][0])
+        attempt2["cancelRequested"] = "True"
+        a_obj = Attempt(**attempt)
+        prepare_mock(self.client, mocker, ret_val=attempt2)
+        r = self.client.attempt(a_obj, inplace=True)
+        assert r is None
+        assert a_obj.cancelRequested is True
+
+    def test_retried_attempts(self, mocker):
+        prepare_mock(self.client, mocker, ret_val=RESP_DATA_GET_6)
+        attempts = self.client.retried_attempts(RESP_DATA_GET_6["attempts"][0]["id"])
+        assert [Attempt(**a) for a in RESP_DATA_GET_6["attempts"]] == attempts
+
+    def test_start_attempt(self, mocker):
+        a = RESP_DATA_GET_6["attempts"][0]
+        prepare_mock(self.client, mocker, a, method="put",  content=b"abc", json=True)
+        attempt = self.client.start_attempt(a["id"])
+        assert Attempt(**a) == attempt
+
+    def test_kill_attempt(self, mocker):
+        a = RESP_DATA_GET_6["attempts"][0]
+        a["cancelRequested"] = "True"
+        prepare_mock(self.client, mocker, method="post", status_code=204)
+        prepare_mock(self.client, mocker, a, mock=False)
+        attempt = self.client.kill_attempt(a["id"])
+        assert Attempt(**a) == attempt
+        assert attempt.cancel_requested is True
