@@ -184,23 +184,26 @@ RESP_DATA_DELETE_0 = RESP_DATA_PUT_0
 def prepare_mock(
     client,
     mocker,
-    ret_val=None,
+    ret_json=None,
     status_code=200,
-    side_effect=None,
+    _error=None,
     method="get",
     content=b"",
     mock=True,
     json=False,
+    responses=None,
 ):
     if mock:
         client._http = mocker.MagicMock()
     response = getattr(client._http, method).return_value
     response.status_code = status_code
     response.content = content
-    if ret_val:
-        response.json.return_value = ret_val
-    if side_effect:
-        response.raise_for_status.side_effect = side_effect
+    if ret_json:
+        response.json.return_value = ret_json
+    elif responses:
+        response.json.side_effect = responses
+    if _error:
+        response.raise_for_status.side_effect = _error
     if json:
         response.headers = {"Content-Type": "application/json"}
 
@@ -275,6 +278,19 @@ class TestProjectAPI:
         wfs = self.client.project_workflows(int(pj["id"]))
         assert [Workflow(**w) for w in RESP_DATA_GET_1["workflows"]] == wfs
 
+    def test_project_workflow_by_name(self, mocker):
+        responses = [RESP_DATA_GET_0, RESP_DATA_GET_1]
+        prepare_mock(self.client, mocker, responses=responses)
+
+        wfs = self.client.project_workflows_by_name("pandas-df")
+        assert [Workflow(**w) for w in RESP_DATA_GET_1["workflows"]] == wfs
+
+    def test_nonexist_project_workflow_by_name(self, mocker):
+        prepare_mock(self.client, mocker)
+
+        with pytest.raises(ValueError):
+            self.client.project_workflows_by_name("non-existent-pj")
+
     def test_create_project(self, mocker):
         prepare_mock(
             self.client,
@@ -325,7 +341,7 @@ class TestProjectAPI:
     def test_secrets(self, mocker):
         content = b'{"secrets":[{"key":"foo"},{"key":"bar"}]}'
         ret_val = {"secrets": [{"key": "foo"}, {"key": "bar"}]}
-        prepare_mock(self.client, mocker, ret_val=ret_val, content=content)
+        prepare_mock(self.client, mocker, ret_json=ret_val, content=content)
 
         pj_id = RESP_DATA_GET_0["projects"][0]["id"]
         assert self.client.secrets(int(pj_id)) == ["foo", "bar"]
@@ -333,13 +349,13 @@ class TestProjectAPI:
     def test_delete_secret(self, mocker):
         content = b'{"secrets":[{"key":"foo"},{"key":"bar"}]}'
         ret_val = {"secrets": [{"key": "foo"}, {"key": "bar"}]}
-        prepare_mock(self.client, mocker, ret_val=ret_val, content=content)
+        prepare_mock(self.client, mocker, ret_json=ret_val, content=content)
 
         prepare_mock(
             self.client,
             mocker,
             status_code=204,
-            ret_val={"secrets": [{"key": "foo"}]},
+            ret_json={"secrets": [{"key": "foo"}]},
             method="delete",
             mock=False,
         )
@@ -354,13 +370,13 @@ class TestWorkflowAPI:
         self.client = Client(site="us", apikey="APIKEY")
 
     def test_workflows(self, mocker):
-        prepare_mock(self.client, mocker, ret_val=RESP_DATA_GET_1)
+        prepare_mock(self.client, mocker, ret_json=RESP_DATA_GET_1)
         wfs = self.client.workflows()
         assert [Workflow(**w) for w in RESP_DATA_GET_1["workflows"]] == wfs
 
     def test_workflow(self, mocker):
         target_wf = RESP_DATA_GET_1["workflows"][0]
-        prepare_mock(self.client, mocker, ret_val=target_wf)
+        prepare_mock(self.client, mocker, ret_json=target_wf)
 
         wf = self.client.workflow(int(target_wf["id"]))
         assert Workflow(**target_wf) == wf
@@ -370,11 +386,11 @@ class TestWorkflowAPI:
             self.client,
             mocker,
             status_code=404,
-            ret_val={
+            ret_json={
                 "message": "Resource does not exist: workflow id=-1",
                 "status": 404,
             },
-            side_effect=requests.exceptions.HTTPError(),
+            _error=requests.exceptions.HTTPError(),
         )
 
         with pytest.raises(exceptions.HttpError):
@@ -387,14 +403,14 @@ class TestScheduleAPI:
         self.client = Client(site="us", apikey="APIKEY")
 
     def test_schedules(self, mocker):
-        prepare_mock(self.client, mocker, ret_val=RESP_DATA_GET_3)
+        prepare_mock(self.client, mocker, ret_json=RESP_DATA_GET_3)
 
         sches = self.client.schedules()
         assert [Schedule(**s) for s in RESP_DATA_GET_3["schedules"]] == sches
 
     def test_schedule(self, mocker):
         sched = RESP_DATA_GET_3["schedules"][0]
-        prepare_mock(self.client, mocker, ret_val=sched)
+        prepare_mock(self.client, mocker, ret_json=sched)
 
         assert Schedule(**sched) == self.client.schedule(int(sched["id"]))
 
@@ -402,7 +418,7 @@ class TestScheduleAPI:
         prepare_mock(
             self.client,
             mocker,
-            ret_val=RESP_DATA_GET_4,
+            ret_json=RESP_DATA_GET_4,
             method="post",
             json=True,
             content=b"acb",
@@ -419,7 +435,7 @@ class TestScheduleAPI:
         sched = scheds["schedules"][0]
         sched["disabledAt"] = "2019-11-01T07:37:51Z"
         prepare_mock(
-            self.client, mocker, ret_val=sched, method="post", json=True, content=b"abc"
+            self.client, mocker, ret_json=sched, method="post", json=True, content=b"abc"
         )
         s = self.client.disable_schedule(int(sched["id"]))
         assert Schedule(**sched) == s
@@ -428,7 +444,7 @@ class TestScheduleAPI:
     def test_enbale_schedule(self, mocker):
         sched = RESP_DATA_GET_3["schedules"][0]
         prepare_mock(
-            self.client, mocker, ret_val=sched, method="post", json=True, content=b"abc"
+            self.client, mocker, ret_json=sched, method="post", json=True, content=b"abc"
         )
         s = self.client.disable_schedule(int(sched["id"]))
         assert Schedule(**sched) == s
@@ -437,7 +453,7 @@ class TestScheduleAPI:
     def test_skip_schedule(self, mocker):
         sched = RESP_DATA_GET_3["schedules"][0]
         prepare_mock(
-            self.client, mocker, ret_val=sched, method="post", json=True, content=b"abc"
+            self.client, mocker, ret_json=sched, method="post", json=True, content=b"abc"
         )
         s = self.client.skip_schedule(int(sched["id"]))
         assert Schedule(**sched) == s
@@ -449,18 +465,18 @@ class TestSessionAPI:
         self.client = Client(site="us", apikey="APIKEY")
 
     def test_sessions(self, mocker):
-        prepare_mock(self.client, mocker, ret_val=RESP_DATA_GET_5)
+        prepare_mock(self.client, mocker, ret_json=RESP_DATA_GET_5)
         s = self.client.sessions()
         assert [Session(**ss) for ss in RESP_DATA_GET_5["sessions"]] == s
 
     def test_session(self, mocker):
         session = RESP_DATA_GET_5["sessions"][0]
-        prepare_mock(self.client, mocker, ret_val=session)
+        prepare_mock(self.client, mocker, ret_json=session)
         s = self.client.session(int(session["id"]))
         assert Session(**session) == s
 
     def test_session_attempts(self, mocker):
-        prepare_mock(self.client, mocker, ret_val=RESP_DATA_GET_6)
+        prepare_mock(self.client, mocker, ret_json=RESP_DATA_GET_6)
         session = RESP_DATA_GET_5["sessions"][0]
         a = self.client.session_attempts(int(session["id"]))
         assert [Attempt(**at) for at in RESP_DATA_GET_6["attempts"]] == a
@@ -473,7 +489,7 @@ class TestLogAPI:
 
     def test_log_files(self, mocker):
         attempt = RESP_DATA_GET_6["attempts"][0]
-        prepare_mock(self.client, mocker, ret_val=RESP_DATA_GET_7)
+        prepare_mock(self.client, mocker, ret_json=RESP_DATA_GET_7)
         files = self.client.log_files(int(attempt["id"]))
         assert [LogFile(**l) for l in RESP_DATA_GET_7["files"]] == files
 
@@ -487,7 +503,7 @@ class TestLogAPI:
         with gzip.open(dummy_file, "wb") as f:
             f.write(b"abc")
 
-        prepare_mock(self.client, mocker, ret_val=file, content=dummy_file.getvalue())
+        prepare_mock(self.client, mocker, ret_json=file, content=dummy_file.getvalue())
         f = self.client.log_file(attempt_id, file["fileName"])
         assert isinstance(f, str)
 
@@ -498,25 +514,25 @@ class TestAttemptAPI:
         self.client = Client(site="us", apikey="APIKEY")
 
     def test_attemtps(self, mocker):
-        prepare_mock(self.client, mocker, ret_val=RESP_DATA_GET_6)
+        prepare_mock(self.client, mocker, ret_json=RESP_DATA_GET_6)
         attempts = self.client.attempts()
         assert [Attempt(**a) for a in RESP_DATA_GET_6["attempts"]] == attempts
 
     def test_attempt(self, mocker):
         attempt = RESP_DATA_GET_6["attempts"][0]
-        prepare_mock(self.client, mocker, ret_val=attempt)
+        prepare_mock(self.client, mocker, ret_json=attempt)
         assert Attempt(**attempt) == self.client.attempt(attempt["id"])
 
         attempt2 = copy.deepcopy(RESP_DATA_GET_6["attempts"][0])
         attempt2["cancelRequested"] = "True"
         a_obj = Attempt(**attempt)
-        prepare_mock(self.client, mocker, ret_val=attempt2)
+        prepare_mock(self.client, mocker, ret_json=attempt2)
         r = self.client.attempt(a_obj, inplace=True)
         assert r is None
         assert a_obj.cancelRequested is True
 
     def test_retried_attempts(self, mocker):
-        prepare_mock(self.client, mocker, ret_val=RESP_DATA_GET_6)
+        prepare_mock(self.client, mocker, ret_json=RESP_DATA_GET_6)
         attempts = self.client.retried_attempts(RESP_DATA_GET_6["attempts"][0]["id"])
         assert [Attempt(**a) for a in RESP_DATA_GET_6["attempts"]] == attempts
 

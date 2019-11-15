@@ -192,7 +192,7 @@ class ProjectAPI:
         :return: List of Workflow
         """
         projects = self.projects(project_name)
-        if not projects == 0:
+        if not projects:
             raise ValueError(f"Unable to find project name {project_name}")
 
         return self.project_workflows(projects[0].id)
