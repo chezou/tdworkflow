@@ -4,6 +4,9 @@ Version History
 unreleased
 ----------
 
+v0.2.1 (2019-11-15)
+-------------------
+
 * Fix Client.project_workflows_by_name with unexist project name (#3)
 
 v0.2.0 (2019-11-1)
