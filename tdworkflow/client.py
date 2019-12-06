@@ -136,7 +136,14 @@ class ProjectAPI:
         revision = revision or str(uuid.uuid4())
         params = {"project": project_name, "revision": revision}
 
-        default_excludes = ["venv", ".venv", "__pycache__", ".egg-info", ".digdag", ".pyc"]
+        default_excludes = [
+            "venv",
+            ".venv",
+            "__pycache__",
+            ".egg-info",
+            ".digdag",
+            ".pyc",
+        ]
         if exclude_patterns:
             exclude_patterns.extend(default_excludes)
         else:

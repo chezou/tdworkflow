@@ -301,7 +301,9 @@ class TestProjectAPI:
             json=True,
         )
 
-        pj = self.client.create_project("test-project", "tests/resources/sample_project")
+        pj = self.client.create_project(
+            "test-project", "tests/resources/sample_project"
+        )
         assert Project(**RESP_DATA_PUT_0) == pj
 
     def test_delete_project(self, mocker):
@@ -435,7 +437,12 @@ class TestScheduleAPI:
         sched = scheds["schedules"][0]
         sched["disabledAt"] = "2019-11-01T07:37:51Z"
         prepare_mock(
-            self.client, mocker, ret_json=sched, method="post", json=True, content=b"abc"
+            self.client,
+            mocker,
+            ret_json=sched,
+            method="post",
+            json=True,
+            content=b"abc",
         )
         s = self.client.disable_schedule(int(sched["id"]))
         assert Schedule(**sched) == s
@@ -444,7 +451,12 @@ class TestScheduleAPI:
     def test_enable_schedule(self, mocker):
         sched = RESP_DATA_GET_3["schedules"][0]
         prepare_mock(
-            self.client, mocker, ret_json=sched, method="post", json=True, content=b"abc"
+            self.client,
+            mocker,
+            ret_json=sched,
+            method="post",
+            json=True,
+            content=b"abc",
         )
         s = self.client.disable_schedule(int(sched["id"]))
         assert Schedule(**sched) == s
@@ -453,7 +465,12 @@ class TestScheduleAPI:
     def test_skip_schedule(self, mocker):
         sched = RESP_DATA_GET_3["schedules"][0]
         prepare_mock(
-            self.client, mocker, ret_json=sched, method="post", json=True, content=b"abc"
+            self.client,
+            mocker,
+            ret_json=sched,
+            method="post",
+            json=True,
+            content=b"abc",
         )
         s = self.client.skip_schedule(int(sched["id"]))
         assert Schedule(**sched) == s
@@ -538,7 +555,7 @@ class TestAttemptAPI:
 
     def test_start_attempt(self, mocker):
         a = RESP_DATA_GET_6["attempts"][0]
-        prepare_mock(self.client, mocker, a, method="put",  content=b"abc", json=True)
+        prepare_mock(self.client, mocker, a, method="put", content=b"abc", json=True)
         attempt = self.client.start_attempt(a["id"])
         assert Attempt(**a) == attempt
 
