@@ -4,6 +4,11 @@ Version History
 unreleased
 ----------
 
+v0.2.3 (2019-12-06)
+-------------------
+
+* Ensure util.archive_file to create file in the root directory (#5)
+
 v0.2.2 (2019-12-06)
 -------------------
 
