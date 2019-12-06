@@ -4,6 +4,11 @@ Version History
 unreleased
 ----------
 
+v0.2.2 (2019-12-06)
+-------------------
+
+* Fix util.archive_files not to copy files into root directory (#4)
+
 v0.2.1 (2019-11-15)
 -------------------
 
