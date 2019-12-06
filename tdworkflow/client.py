@@ -129,7 +129,7 @@ class ProjectAPI:
         :param exclude_patterns: Exclude file patterns. They are treated as regexp
                                  patterns.
                                  default: ["venv", ".venv", "__pycache__", ".egg-info",\
-                                  ".digdag", ".pyc"]
+                                  ".digdag", ".pyc"] + dot files
         :param revision: Revision name
         :return:
         """

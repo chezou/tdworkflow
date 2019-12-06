@@ -301,7 +301,7 @@ class TestProjectAPI:
             json=True,
         )
 
-        pj = self.client.create_project("test-project", "/tmp/foo")
+        pj = self.client.create_project("test-project", "tests/resources/sample_project")
         assert Project(**RESP_DATA_PUT_0) == pj
 
     def test_delete_project(self, mocker):
@@ -441,7 +441,7 @@ class TestScheduleAPI:
         assert Schedule(**sched) == s
         assert s.disabled_at is not None
 
-    def test_enbale_schedule(self, mocker):
+    def test_enable_schedule(self, mocker):
         sched = RESP_DATA_GET_3["schedules"][0]
         prepare_mock(
             self.client, mocker, ret_json=sched, method="post", json=True, content=b"abc"
