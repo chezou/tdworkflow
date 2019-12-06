@@ -17,8 +17,9 @@ def archive_files(target_dir: str, exclude_patterns: List[str]) -> io.BytesIO:
     with tarfile.open(mode="w:gz", fileobj=_bytes) as tar:
         for fn in glob.glob(os.path.join(target_dir, "**"), recursive=True):
             if not re.search(pattern, fn) and os.path.basename(fn) != "":
-                logger.info(f"Added {fn} as {os.path.basename(fn)}")
-                tar.add(fn, os.path.basename(fn))
+                write_fn = fn.replace(f"{target_dir}/", "./")
+                logger.info(f"Added {fn} as {write_fn}")
+                tar.add(fn, write_fn)
 
     _bytes.seek(0)
     return _bytes
