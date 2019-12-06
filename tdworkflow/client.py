@@ -129,14 +129,21 @@ class ProjectAPI:
         :param exclude_patterns: Exclude file patterns. They are treated as regexp
                                  patterns.
                                  default: ["venv", ".venv", "__pycache__", ".egg-info",\
-                                  ".digdag"]
+                                  ".digdag", ".pyc"] + dot files
         :param revision: Revision name
         :return:
         """
         revision = revision or str(uuid.uuid4())
         params = {"project": project_name, "revision": revision}
 
-        default_excludes = ["venv", ".venv", "__pycache__", ".egg-info", ".digdag"]
+        default_excludes = [
+            "venv",
+            ".venv",
+            "__pycache__",
+            ".egg-info",
+            ".digdag",
+            ".pyc",
+        ]
         if exclude_patterns:
             exclude_patterns.extend(default_excludes)
         else:
