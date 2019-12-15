@@ -49,6 +49,13 @@ tdworkflow.session module
    :undoc-members:
    :show-inheritance:
 
+tdworkflow.task module
+-------------------------
+
+.. automodule:: tdworkflow.task
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 tdworkflow.workflow module
 --------------------------

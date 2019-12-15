@@ -21,6 +21,7 @@ from .project import Project
 from .revision import Revision
 from .schedule import Schedule, ScheduleAttempt
 from .session import Session
+from .task import Task
 from .util import archive_files
 from .workflow import Workflow
 
@@ -428,6 +429,18 @@ class AttemptAPI:
             attempt.update(**r)
         else:
             return Attempt(**r)
+
+    def attempt_tasks(self, attempt: Union[int, Attempt]) -> List[Task]:
+        """Get tasks of a session
+
+        :param attempt: Attempt id or Attempt object
+        :return: List of :class:`Task`
+        """
+
+        attempt_id = attempt.id if isinstance(attempt, Attempt) else attempt
+        r = self.get(f"attempts/{attempt_id}/tasks")
+        res = [Task(**task) for task in r["tasks"]] if r else []
+        return res
 
     def retried_attempts(self, attempt: Union[int, Attempt]) -> List[Attempt]:
         """Get retried attempt list
