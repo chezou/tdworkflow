@@ -13,6 +13,7 @@ from tdworkflow.project import Project
 from tdworkflow.revision import Revision
 from tdworkflow.schedule import Schedule, ScheduleAttempt
 from tdworkflow.session import Session
+from tdworkflow.task import Task
 from tdworkflow.workflow import Workflow
 
 RESP_DATA_GET_0 = {
@@ -164,6 +165,145 @@ RESP_DATA_GET_7 = {
             "agentId": "8@ip-172-18-168-153.ec2.internal",
             "direct": "https://digdag.example.com/log/2019-11-01/XXXX",
         }
+    ]
+}
+
+RESP_DATA_GET_8 = {
+    "tasks": [
+        {
+            "id": "1",
+            "fullName": "+simple",
+            "parentId": None,
+            "config": {},
+            "upstreams": [],
+            "state": "planned",
+            "cancelRequested": False,
+            "exportParams": {},
+            "storeParams": {},
+            "stateParams": {},
+            "updatedAt": "2019-12-15T07:27:16Z",
+            "retryAt": None,
+            "startedAt": None,
+            "error": {},
+            "isGroup": True,
+        },
+        {
+            "id": "2",
+            "fullName": "+simple+simple_with_arg",
+            "parentId": "1",
+            "config": {
+                "py>": "py_scripts.examples.print_arg",
+                "msg": "Hello World",
+                "docker": {"image": "digdag/digdag-python:3.7"},
+            },
+            "upstreams": [],
+            "state": "running",
+            "cancelRequested": False,
+            "exportParams": {},
+            "storeParams": {},
+            "stateParams": {},
+            "updatedAt": "2019-12-15T07:27:16Z",
+            "retryAt": None,
+            "startedAt": "2019-12-15T07:27:16Z",
+            "error": {},
+            "isGroup": False,
+        },
+        {
+            "id": "3",
+            "fullName": "+simple+simple_with_env",
+            "parentId": "1",
+            "config": {
+                "py>": "py_scripts.examples.print_env",
+                "_env": {"MY_ENV_VAR": "hello"},
+                "docker": {"image": "digdag/digdag-python:3.7"},
+            },
+            "upstreams": ["2"],
+            "state": "blocked",
+            "cancelRequested": False,
+            "exportParams": {},
+            "storeParams": {},
+            "stateParams": {},
+            "updatedAt": "2019-12-15T07:27:16Z",
+            "retryAt": None,
+            "startedAt": None,
+            "error": {},
+            "isGroup": False,
+        },
+        {
+            "id": "4",
+            "fullName": "+simple+simple_with_import",
+            "parentId": "1",
+            "config": {
+                "py>": "py_scripts.examples.import_another_file",
+                "docker": {"image": "digdag/digdag-python:3.7"},
+            },
+            "upstreams": ["3"],
+            "state": "blocked",
+            "cancelRequested": False,
+            "exportParams": {},
+            "storeParams": {},
+            "stateParams": {},
+            "updatedAt": "2019-12-15T07:27:16Z",
+            "retryAt": None,
+            "startedAt": None,
+            "error": {},
+            "isGroup": False,
+        },
+        {
+            "id": "5",
+            "fullName": "+simple+simple_with_workflow_env",
+            "parentId": "1",
+            "config": {},
+            "upstreams": ["4"],
+            "state": "blocked",
+            "cancelRequested": False,
+            "exportParams": {},
+            "storeParams": {},
+            "stateParams": {},
+            "updatedAt": "2019-12-15T07:27:16Z",
+            "retryAt": None,
+            "startedAt": None,
+            "error": {},
+            "isGroup": True,
+        },
+        {
+            "id": "6",
+            "fullName": "+simple+simple_with_workflow_env+store_msg",
+            "parentId": "5",
+            "config": {
+                "py>": "py_scripts.examples.store_workflow_env",
+                "msg": "Hello World",
+                "docker": {"image": "digdag/digdag-python:3.7"},
+            },
+            "upstreams": [],
+            "state": "blocked",
+            "cancelRequested": False,
+            "exportParams": {},
+            "storeParams": {},
+            "stateParams": {},
+            "updatedAt": "2019-12-15T07:27:16Z",
+            "retryAt": None,
+            "startedAt": None,
+            "error": {},
+            "isGroup": False,
+        },
+        {
+            "id": "7",
+            "fullName": "+simple+simple_with_workflow_env+restore_msg",
+            "parentId": "5",
+            "config": {"echo>": "${my_msg}"},
+            "upstreams": ["6"],
+            "state": "blocked",
+            "cancelRequested": False,
+            "exportParams": {},
+            "storeParams": {},
+            "stateParams": {},
+            "updatedAt": "2019-12-15T07:27:16Z",
+            "retryAt": None,
+            "startedAt": None,
+            "error": {},
+            "isGroup": False,
+        },
     ]
 }
 
@@ -547,6 +687,11 @@ class TestAttemptAPI:
         r = self.client.attempt(a_obj, inplace=True)
         assert r is None
         assert a_obj.cancelRequested is True
+
+    def test_attempt_tasks(self, mocker):
+        prepare_mock(self.client, mocker, ret_json=RESP_DATA_GET_8)
+        tasks = self.client.attempt_tasks(1)
+        assert [Task(**t) for t in RESP_DATA_GET_8["tasks"]] == tasks
 
     def test_retried_attempts(self, mocker):
         prepare_mock(self.client, mocker, ret_json=RESP_DATA_GET_6)
