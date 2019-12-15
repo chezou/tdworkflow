@@ -4,6 +4,11 @@ Version History
 unreleased
 ----------
 
+v0.3.0 (2019-12-15)
+-------------------
+
+* Add client.attempt_tasks to fetch attempt associated tasks (#6)
+
 v0.2.3 (2019-12-06)
 -------------------
 
