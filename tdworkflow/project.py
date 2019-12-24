@@ -1,4 +1,7 @@
 import dataclasses
+from datetime import datetime
+
+from .util import parse_iso8601
 
 
 @dataclasses.dataclass
@@ -8,12 +11,15 @@ class Project:
     revision: str = ""
     archiveType: str = ""
     archiveMd5: str = ""
-    createdAt: str = ""
-    deletedAt: str = ""
-    updatedAt: str = ""
+    createdAt: datetime = None
+    deletedAt: datetime = None
+    updatedAt: datetime = None
 
     def __post_init__(self):
         self.id = int(self.id)
+        self.createdAt = parse_iso8601(self.createdAt)
+        self.deletedAt = parse_iso8601(self.deletedAt)
+        self.updatedAt = parse_iso8601(self.updatedAt)
 
     @property
     def archive_type(self):

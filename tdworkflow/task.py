@@ -1,30 +1,36 @@
 import dataclasses
 import json
+from datetime import datetime
 from typing import Dict, List
+
+from .util import parse_iso8601
 
 
 @dataclasses.dataclass
 class Task:
     id: int
     state: str
-    updatedAt: str = ""
+    updatedAt: datetime = None
     fullName: str = ""
     parentId: int = None
     upstreams: List[int] = None
-    retryAt: str = None
+    retryAt: datetime = None
     config: Dict = None
     exportParams: Dict = None
     storeParams: Dict = None
     stateParams: Dict = None
     error: Dict = None
-    startedAt: str = None
+    startedAt: datetime = None
     cancelRequested: bool = False
     isGroup: bool = False
 
     def __post_init__(self):
         self.id = int(self.id)
+        self.updatedAt = parse_iso8601(self.updatedAt)
         self.parentId = int(self.parentId) if self.parentId else None
         self.upstreams = [int(_id) for _id in self.upstreams]
+        self.retryAt = parse_iso8601(self.retryAt)
+        self.startedAt = parse_iso8601(self.startedAt)
 
     @property
     def updated_at(self):

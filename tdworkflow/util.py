@@ -4,7 +4,8 @@ import logging
 import os
 import re
 import tarfile
-from typing import List
+from datetime import datetime, timedelta, timezone
+from typing import List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -35,3 +36,29 @@ def archive_files(target_dir: str, exclude_patterns: List[str]) -> io.BytesIO:
 
     _bytes.seek(0)
     return _bytes
+
+
+def parse_iso8601(target: str) -> Optional[datetime]:
+    if not target:
+        return None
+
+    return datetime.fromisoformat(target.replace("Z", "+00:00"))
+
+
+def to_iso8601(dt: datetime) -> str:
+    if not datetime:
+        return ""
+
+    if isinstance(dt, datetime):
+        # Naive object
+        if not dt.tzinfo:
+            return dt.astimezone(timezone(timedelta(0), "UTC")).isoformat()
+        # Aware object
+        else:
+            return dt.isoformat()
+
+    elif isinstance(dt, str):
+        return dt
+
+    else:
+        raise ValueError("Unexpected type")

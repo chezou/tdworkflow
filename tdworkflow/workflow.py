@@ -1,6 +1,8 @@
 import dataclasses
+from datetime import datetime
 
 from .project import Project
+from .util import parse_iso8601
 
 
 @dataclasses.dataclass
@@ -11,14 +13,16 @@ class Workflow:
     timezone: str = ""
     config: dict = None
     revision: str = ""
-    createdAt: str = ""
-    deletedAt: str = ""
-    updatedAt: str = ""
+    createdAt: datetime = None
+    deletedAt: datetime = None
+    updatedAt: datetime = None
 
     def __post_init__(self):
         self.id = int(self.id)
-        if self.project:
-            self.project = Project(**self.project)
+        self.project = Project(**self.project) if self.project else None
+        self.createdAt = parse_iso8601(self.createdAt)
+        self.deletedAt = parse_iso8601(self.deletedAt)
+        self.updatedAt = parse_iso8601(self.updatedAt)
 
     @property
     def created_at(self):

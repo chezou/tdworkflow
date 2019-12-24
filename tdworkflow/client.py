@@ -5,7 +5,7 @@ import logging
 import os
 import time
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 from typing import Any, BinaryIO, Dict, List, Optional, Tuple, Union
 
 import requests
@@ -22,7 +22,7 @@ from .revision import Revision
 from .schedule import Schedule, ScheduleAttempt
 from .session import Session
 from .task import Task
-from .util import archive_files
+from .util import archive_files, to_iso8601
 from .workflow import Workflow
 
 logger = logging.getLogger(__name__)
@@ -474,8 +474,7 @@ class AttemptAPI:
         workflow_params = workflow_params if workflow_params else {}
         _params.update({"params": workflow_params})
         if not session_time:
-            utc = timezone(timedelta(), "UTC")
-            session_time = datetime.now(utc).isoformat()
+            session_time = to_iso8601(datetime.now())
         if retry_attempt_name:
             _params.update({"retryAttemptName": retry_attempt_name})
 
@@ -553,7 +552,7 @@ class ScheduleAPI:
         self,
         schedule: Union[int, Schedule],
         attempt_name: str,
-        from_time: str,
+        from_time: Union[str, datetime],
         dry_run: bool = False,
         count: Optional[int] = None,
     ) -> ScheduleAttempt:
@@ -568,7 +567,7 @@ class ScheduleAPI:
         """
         params = {}
         if from_time:
-            params["fromTime"] = from_time
+            params["fromTime"] = to_iso8601(from_time)
         if attempt_name:
             params["attemptName"] = attempt_name
         if count:
@@ -611,9 +610,9 @@ class ScheduleAPI:
     def skip_schedule(
         self,
         schedule: Union[int, Schedule],
-        from_time: Optional[str] = None,
+        from_time: Optional[Union[str, datetime]] = None,
         next_time: Optional[str] = None,
-        next_run_time: Optional[str] = None,
+        next_run_time: Optional[Union[str, datetime]] = None,
         dry_run: Optional[bool] = False,
     ) -> Schedule:
         """Skip schedules forward to a future time
@@ -627,11 +626,11 @@ class ScheduleAPI:
         """
         params = {}
         if from_time:
-            params["fromTime"] = from_time
+            params["fromTime"] = to_iso8601(from_time)
         if next_time:
             params["nextTime"] = next_time
         if next_run_time:
-            params["nextRunTime"] = next_run_time
+            params["nextRunTime"] = to_iso8601(next_run_time)
         params["dryRun"] = dry_run
         schedule_id = schedule.id if isinstance(schedule, Schedule) else schedule
         r = self.post(f"schedules/{schedule_id}/skip", body=params)
