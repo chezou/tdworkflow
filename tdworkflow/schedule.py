@@ -1,8 +1,10 @@
 import dataclasses
+from datetime import datetime
 from typing import Dict, List
 
 from .attempt import Attempt
 from .project import Project
+from .util import parse_iso8601
 from .workflow import Workflow
 
 
@@ -11,16 +13,20 @@ class Schedule:
     id: int
     project: Project
     workflow: Workflow
-    createdAt: str = ""
-    updatedAt: str = ""
-    disabledAt: str = ""
+    createdAt: datetime = None
+    updatedAt: datetime = None
+    disabledAt: datetime = None
     nextScheduleTime: Dict = None
-    nextRunTime: str = ""
+    nextRunTime: datetime = None
 
     def __post_init__(self):
         self.id = int(self.id)
         self.project = Project(**self.project)
         self.workflow = Workflow(**self.workflow)
+        self.createdAt = parse_iso8601(self.createdAt)
+        self.updatedAt = parse_iso8601(self.updatedAt)
+        self.disabledAt = parse_iso8601(self.disabledAt)
+        self.nextRunTime = parse_iso8601(self.nextRunTime)
 
     @property
     def created_at(self):
@@ -33,6 +39,14 @@ class Schedule:
     @property
     def disabled_at(self):
         return self.disabledAt
+
+    @property
+    def next_run_time(self):
+        return self.nextRunTime
+
+    @property
+    def next_schedule_time(self):
+        return self.nextScheduleTime
 
 
 @dataclasses.dataclass

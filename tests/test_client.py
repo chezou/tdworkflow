@@ -1,4 +1,5 @@
 import copy
+import datetime
 import io
 
 import pytest
@@ -390,6 +391,9 @@ class TestProjectAPI:
 
         pjs = self.client.projects()
         assert pjs == [Project(**p) for p in RESP_DATA_GET_0["projects"]]
+        assert isinstance(pjs[0].created_at, datetime.datetime)
+        assert isinstance(pjs[0].updated_at, datetime.datetime)
+        assert pjs[0].deleted_at is None
 
         pj_name = RESP_DATA_GET_0["projects"][0]["name"]
         pjs2 = self.client.projects(name=pj_name)
@@ -549,6 +553,7 @@ class TestScheduleAPI:
 
         sches = self.client.schedules()
         assert [Schedule(**s) for s in RESP_DATA_GET_3["schedules"]] == sches
+        assert isinstance(sches[0].next_run_time, datetime.datetime)
 
     def test_schedule(self, mocker):
         sched = RESP_DATA_GET_3["schedules"][0]

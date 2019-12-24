@@ -1,7 +1,9 @@
 import dataclasses
+from datetime import datetime
 
 from .attempt import Attempt
 from .project import Project
+from .util import parse_iso8601
 from .workflow import Workflow
 
 
@@ -11,13 +13,14 @@ class Session:
     project: Project
     workflow: Workflow
     sessionUuid: str
-    sessionTime: str
-    lastAttempt: Attempt
+    sessionTime: datetime = None
+    lastAttempt: Attempt = None
 
     def __post_init__(self):
         self.id = int(self.id)
         self.project = Project(**self.project)
         self.workflow = Workflow(**self.workflow)
+        self.sessionTime = parse_iso8601(self.sessionTime)
         self.lastAttempt = Attempt(**self.lastAttempt)
 
     @property

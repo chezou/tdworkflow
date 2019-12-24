@@ -1,7 +1,9 @@
 import dataclasses
+from datetime import datetime
 from typing import Dict
 
 from .project import Project
+from .util import parse_iso8601
 from .workflow import Workflow
 
 
@@ -10,7 +12,7 @@ class Attempt:
     id: int
     sessionId: int = -1
     sessionUuid: str = ""
-    sessionTime: str = ""
+    sessionTime: datetime = None
     workflow: Workflow = None
     project: Project = None
     index: int = -1
@@ -19,11 +21,12 @@ class Attempt:
     success: bool = False
     cancelRequested: bool = False
     params: Dict = None
-    createdAt: str = ""
-    finishedAt: str = ""
+    createdAt: datetime = None
+    finishedAt: datetime = None
 
     def __post_init__(self):
         self.id = int(self.id)
+        self.sessionTime = parse_iso8601(self.sessionTime)
         if self.project and isinstance(self.project, dict):
             self.project = Project(**self.project)
         if self.workflow and isinstance(self.workflow, dict):
@@ -31,6 +34,8 @@ class Attempt:
         self.done = bool(self.done)
         self.success = bool(self.success)
         self.cancelRequested = bool(self.cancelRequested)
+        self.createdAt = parse_iso8601(self.createdAt)
+        self.finishedAt = parse_iso8601(self.finishedAt)
 
     @property
     def session_id(self):
@@ -41,7 +46,7 @@ class Attempt:
         return self.sessionUuid
 
     @property
-    def sesesion_time(self):
+    def session_time(self):
         return self.sessionTime
 
     @property

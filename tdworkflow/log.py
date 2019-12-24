@@ -1,15 +1,21 @@
 import dataclasses
+from datetime import datetime
 from typing import Dict
+
+from .util import parse_iso8601
 
 
 @dataclasses.dataclass
 class LogFile:
     fileName: str
     taskName: str
-    fileTime: int
     direct: Dict
     fileSize: int
     agentId: str
+    fileTime: datetime = None
+
+    def __post_init__(self):
+        self.fileTime = parse_iso8601(self.fileTime)
 
     @property
     def file_name(self):
