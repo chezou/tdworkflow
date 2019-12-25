@@ -464,7 +464,7 @@ class AttemptAPI:
         """Start workflow session
 
         :param workflow: Workflow id or Workflow object
-        :param session_time: Session time, optional
+        :param session_time: Session time, optional Default: ``datetime.datetime.now()``
         :param retry_attempt_name: Retry attempt name, optional
         :param workflow_params: Extra workflow parameters
         :return:
@@ -560,8 +560,9 @@ class ScheduleAPI:
 
         :param schedule: Target Schedule id or Schedule object
         :param attempt_name: Attempt name
-        :param from_time: From time
-        :param dry_run: Flag for dry run e.g "2019-11-01T06:20:07.000+00:00"
+        :param from_time: From time e.g "2019-11-01T06:20:07.000+00:00" in ``str`` or
+                          :class:`datetime.datetime`.
+        :param dry_run: Flag for dry run
         :param count: Count
         :return: ScheduleAttempt
         """
