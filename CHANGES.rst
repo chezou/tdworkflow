@@ -4,6 +4,8 @@ Version History
 unreleased
 ----------
 
+* Use datetime object for time representatives (#7)
+
 v0.3.0 (2019-12-15)
 -------------------
 
