@@ -620,7 +620,7 @@ class ScheduleAPI:
         :param schedule: Schedule ID or Schedule object
         :param from_time: From time
         :param next_time: Next time
-        :param next_run_time: NExt run time
+        :param next_run_time: Next run time
         :param dry_run: Flag for dry run
         :return: New Schedule
         """
