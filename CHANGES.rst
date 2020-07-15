@@ -4,6 +4,11 @@ Version History
 unreleased
 ----------
 
+v0.5.0 (2020-07-15)
+-------------------
+
+* Support status field in Attempts (#8, #9)
+
 v0.4.0 (2019-12-25)
 -------------------
 
