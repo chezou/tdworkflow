@@ -37,7 +37,7 @@ class WorkflowAPI:
         """
         res = self.get("workflows")
         if len(res) > 0:
-            return [Workflow(**wf) for wf in res["workflows"]]
+            return [Workflow.from_api_repr(**wf) for wf in res["workflows"]]
         else:
             return []
 
@@ -51,7 +51,7 @@ class WorkflowAPI:
         """
         workflow_id = workflow.id if isinstance(workflow, Workflow) else workflow
         res = self.get(f"workflows/{workflow_id}")
-        return Workflow(**res)
+        return Workflow.from_api_repr(**res)
 
 
 class ProjectAPI:
@@ -64,7 +64,7 @@ class ProjectAPI:
         """
         project_id = project.id if isinstance(project, Project) else project
         r = self.get(f"projects/{project_id}")
-        return Project(**r)
+        return Project.from_api_repr(**r)
 
     def projects(self, name: Optional[str] = None) -> List[Project]:
         """List projects
@@ -80,7 +80,7 @@ class ProjectAPI:
 
         res = self.get(f"projects", params=params)
         if res:
-            return [Project(**proj) for proj in res["projects"]]
+            return [Project.from_api_repr(**proj) for proj in res["projects"]]
         else:
             return []
 
@@ -112,7 +112,7 @@ class ProjectAPI:
         project_id = project.id if isinstance(project, Project) else project
         r = self.get(f"projects/{project_id}/workflows", params=params)
         if r:
-            return [Workflow(**wf) for wf in r["workflows"]]
+            return [Workflow.from_api_repr(**wf) for wf in r["workflows"]]
         else:
             return []
 
@@ -153,7 +153,7 @@ class ProjectAPI:
         r = self.put("projects", params=params, data=data)
 
         if r:
-            return Project(**r)
+            return Project.from_api_repr(**r)
         else:
             raise ValueError("Unable to crate project")
 
@@ -214,7 +214,7 @@ class ProjectAPI:
         project_id = project.id if isinstance(project, Project) else project
         res = self.get(f"projects/{project_id}/revisions")
         if res:
-            return [Revision(**rev) for rev in res["revisions"]]
+            return [Revision.from_api_repr(**rev) for rev in res["revisions"]]
         else:
             return []
 
@@ -242,7 +242,7 @@ class ProjectAPI:
         project_id = project.id if isinstance(project, Project) else project
         res = self.get(f"projects/{project_id}/schedules", params=params)
         if res:
-            return [Schedule(**s) for s in res["schedules"]]
+            return [Schedule.from_api_repr(**s) for s in res["schedules"]]
         else:
             return []
 
@@ -360,7 +360,7 @@ class ProjectAPI:
         project_id = project.id if isinstance(project, Project) else project
         r = self.get(f"projects/{project_id}/sessions")
         if r:
-            return [Session(**s) for s in r["sessions"]]
+            return [Session.from_api_repr(**s) for s in r["sessions"]]
         else:
             return []
 
@@ -406,7 +406,9 @@ class AttemptAPI:
             params.update({"page_size": page_size})
 
         r = self.get("attempts", params=params)
-        res = [Attempt(**attempt) for attempt in r["attempts"]] if r else []
+        res = (
+            [Attempt.from_api_repr(**attempt) for attempt in r["attempts"]] if r else []
+        )
         return res
 
     def attempt(
@@ -428,7 +430,7 @@ class AttemptAPI:
         if inplace:
             attempt.update(**r)
         else:
-            return Attempt(**r)
+            return Attempt.from_api_repr(**r)
 
     def attempt_tasks(self, attempt: Union[int, Attempt]) -> List[Task]:
         """Get tasks of a session
@@ -439,7 +441,7 @@ class AttemptAPI:
 
         attempt_id = attempt.id if isinstance(attempt, Attempt) else attempt
         r = self.get(f"attempts/{attempt_id}/tasks")
-        res = [Task(**task) for task in r["tasks"]] if r else []
+        res = [Task.from_api_repr(**task) for task in r["tasks"]] if r else []
         return res
 
     def retried_attempts(self, attempt: Union[int, Attempt]) -> List[Attempt]:
@@ -481,7 +483,7 @@ class AttemptAPI:
         _params["sessionTime"] = session_time
         r = self.put("attempts", _json=_params)
         if r:
-            return Attempt(**r)
+            return Attempt.from_api_repr(**r)
         else:
             raise ValueError("Unable to start attempt")
 
@@ -531,7 +533,7 @@ class ScheduleAPI:
         """
         r = self.get("schedules", params={"last_id": last_id})
         if r:
-            return [Schedule(**s) for s in r["schedules"]]
+            return [Schedule.from_api_repr(**s) for s in r["schedules"]]
         else:
             return []
 
@@ -544,7 +546,7 @@ class ScheduleAPI:
         schedule_id = schedule.id if isinstance(schedule, Schedule) else schedule
         r = self.get(f"schedules/{schedule_id}")
         if r:
-            return Schedule(**r)
+            return Schedule.from_api_repr(**r)
         else:
             raise ValueError(f"Unable to find schedule id: {schedule_id}")
 
@@ -578,7 +580,7 @@ class ScheduleAPI:
         schedule_id = schedule.id if isinstance(schedule, Schedule) else schedule
         r = self.post(f"schedules/{schedule_id}/backfill", body=params)
         if r:
-            return ScheduleAttempt(**r)
+            return ScheduleAttempt.from_api_repr(**r)
         else:
             raise ValueError(f"Unable to backfill for schedule: {schedule_id}")
 
@@ -591,7 +593,7 @@ class ScheduleAPI:
         schedule_id = schedule.id if isinstance(schedule, Schedule) else schedule
         r = self.post(f"schedules/{schedule_id}/disable")
         if r:
-            return Schedule(**r)
+            return Schedule.from_api_repr(**r)
         else:
             raise ValueError(f"Unable to disable schedule id: {schedule_id}")
 
@@ -604,7 +606,7 @@ class ScheduleAPI:
         schedule_id = schedule.id if isinstance(schedule, Schedule) else schedule
         r = self.post(f"schedules/{schedule_id}/enable")
         if r:
-            return Schedule(**r)
+            return Schedule.from_api_repr(**r)
         else:
             raise ValueError(f"Unable to enable schedule id: {schedule_id}")
 
@@ -636,7 +638,7 @@ class ScheduleAPI:
         schedule_id = schedule.id if isinstance(schedule, Schedule) else schedule
         r = self.post(f"schedules/{schedule_id}/skip", body=params)
         if r:
-            return Schedule(**r)
+            return Schedule.from_api_repr(**r)
         else:
             raise ValueError(f"Unable to skip schedule id: {schedule_id}")
 
@@ -672,7 +674,7 @@ class SessionAPI:
         session_id = session.id if isinstance(session, Session) else session
         r = self.get(f"sessions/{session_id}")
         if r:
-            return Session(**r)
+            return Session.from_api_repr(**r)
         else:
             raise ValueError(f"Unable to get sesesion id: {session_id}")
 
@@ -698,7 +700,7 @@ class SessionAPI:
         session_id = session.id if isinstance(session, Session) else session
         r = self.get(f"sessions/{session_id}/attempts", params=params)
         if r:
-            return [Attempt(**e) for e in r["attempts"]]
+            return [Attempt.from_api_repr(**e) for e in r["attempts"]]
         else:
             return []
 
@@ -726,7 +728,7 @@ class LogAPI:
         attempt_id = attempt.id if isinstance(attempt, Attempt) else attempt
         r = self.get(f"logs/{attempt_id}/files")
         if r:
-            return [LogFile(**l) for l in r["files"]]
+            return [LogFile.from_api_repr(**l) for l in r["files"]]
         else:
             return []
 
@@ -756,7 +758,7 @@ class LogAPI:
 
 
         .. code-block:: python
-           
+
            >>> import tdworkflow
            >>> client = tdworkflow.client.Client("us")
            >>> attempts = client.attempts(project="pandas-df")

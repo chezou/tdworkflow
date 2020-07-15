@@ -3,12 +3,13 @@ from datetime import datetime
 from typing import Dict
 
 from .project import Project
+from .resource import Resource
 from .util import parse_iso8601
 from .workflow import Workflow
 
 
 @dataclasses.dataclass
-class Attempt:
+class Attempt(Resource):
     id: int
     sessionId: int = -1
     sessionUuid: str = ""

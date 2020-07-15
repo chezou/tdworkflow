@@ -2,11 +2,12 @@ import dataclasses
 from datetime import datetime
 
 from .project import Project
+from .resource import Resource
 from .util import parse_iso8601
 
 
 @dataclasses.dataclass
-class Workflow:
+class Workflow(Resource):
     id: int
     name: str
     project: Project = None

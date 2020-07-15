@@ -4,12 +4,13 @@ from typing import Dict, List
 
 from .attempt import Attempt
 from .project import Project
+from .resource import Resource
 from .util import parse_iso8601
 from .workflow import Workflow
 
 
 @dataclasses.dataclass
-class Schedule:
+class Schedule(Resource):
     id: int
     project: Project
     workflow: Workflow
@@ -50,7 +51,7 @@ class Schedule:
 
 
 @dataclasses.dataclass
-class ScheduleAttempt:
+class ScheduleAttempt(Resource):
     id: int
     attempts: List[Attempt]
     project: Project = None

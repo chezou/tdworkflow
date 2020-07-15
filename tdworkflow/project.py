@@ -1,11 +1,12 @@
 import dataclasses
 from datetime import datetime
 
+from .resource import Resource
 from .util import parse_iso8601
 
 
 @dataclasses.dataclass
-class Project:
+class Project(Resource):
     id: int
     name: str
     revision: str = ""
