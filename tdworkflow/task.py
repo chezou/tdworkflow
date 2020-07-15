@@ -3,11 +3,12 @@ import json
 from datetime import datetime
 from typing import Dict, List
 
+from .resource import Resource
 from .util import parse_iso8601
 
 
 @dataclasses.dataclass
-class Task:
+class Task(Resource):
     id: int
     state: str
     updatedAt: datetime = None

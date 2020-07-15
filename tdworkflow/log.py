@@ -2,11 +2,12 @@ import dataclasses
 from datetime import datetime
 from typing import Dict
 
+from .resource import Resource
 from .util import parse_iso8601
 
 
 @dataclasses.dataclass
-class LogFile:
+class LogFile(Resource):
     fileName: str
     taskName: str
     direct: Dict

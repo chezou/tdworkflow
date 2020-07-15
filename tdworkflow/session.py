@@ -3,12 +3,13 @@ from datetime import datetime
 
 from .attempt import Attempt
 from .project import Project
+from .resource import Resource
 from .util import parse_iso8601
 from .workflow import Workflow
 
 
 @dataclasses.dataclass
-class Session:
+class Session(Resource):
     id: int
     project: Project
     workflow: Workflow

@@ -718,3 +718,10 @@ class TestAttemptAPI:
         attempt = self.client.kill_attempt(a["id"])
         assert Attempt(**a) == attempt
         assert attempt.cancel_requested is True
+
+    def test_unknown_field(self, mocker):
+        attempt = RESP_DATA_GET_6["attempts"][0]
+        redundant_attempt = copy.deepcopy(attempt)
+        redundant_attempt["unknonField"] = "foo"
+        prepare_mock(self.client, mocker, ret_json=redundant_attempt)
+        assert Attempt(**attempt) == self.client.attempt(attempt["id"])
