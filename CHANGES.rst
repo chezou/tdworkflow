@@ -4,6 +4,8 @@ Version History
 unreleased
 ----------
 
+* Ignore unknown fields in API responses (#10)
+
 v0.5.0 (2020-07-15)
 -------------------
 
