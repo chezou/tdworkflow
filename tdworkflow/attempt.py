@@ -23,6 +23,7 @@ class Attempt:
     params: Dict = None
     createdAt: datetime = None
     finishedAt: datetime = None
+    status: str = ""
 
     def __post_init__(self):
         self.id = int(self.id)
@@ -36,6 +37,7 @@ class Attempt:
         self.cancelRequested = bool(self.cancelRequested)
         self.createdAt = parse_iso8601(self.createdAt)
         self.finishedAt = parse_iso8601(self.finishedAt)
+        self.status = self.status
 
     @property
     def session_id(self):
@@ -79,3 +81,4 @@ class Attempt:
         self.params = other_attempt.params
         self.createdAt = other_attempt.createdAt
         self.finishedAt = other_attempt.finishedAt
+        self.status = other_attempt.status
