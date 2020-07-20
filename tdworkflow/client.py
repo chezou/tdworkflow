@@ -789,7 +789,8 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
     ) -> None:
         """Treasure Workflow REST API client
 
-        :param site: Site for Treasure Workflow. {"us", "eu01", "jp"} default: "us"
+        :param site: Site for Treasure Workflow.
+                     {"us", "eu01", "jp", "ap02"} default: "us"
                      `site` or `endpoint` must be set.
         :type site: Optional[str], optional
         :param endpoint: Treasure Data Workflow endpoint
@@ -816,9 +817,11 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
             self.endpoint = "api-workflow.treasuredata.co.jp"
         elif site == "eu01":
             self.endpoint = "api-workflow.eu01.treasuredata.com"
+        elif site == "ap02":
+            self.endpoint = "api-workflow.ap02.treasuredata.com"
         else:
             raise ValueError(
-                f"Unknown site: {site}. Use 'us', 'jp', or 'eu01' "
+                f"Unknown site: {site}. Use 'us', 'jp', 'eu01', or 'ap02' "
                 "or you need to set endpoint"
             )
 
