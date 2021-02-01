@@ -5,6 +5,7 @@ import os
 import re
 import tarfile
 from datetime import datetime, timedelta, timezone
+from dateutil.parser import isoparse
 from typing import List, Optional
 
 logger = logging.getLogger(__name__)
@@ -42,7 +43,7 @@ def parse_iso8601(target: str) -> Optional[datetime]:
     if not target:
         return None
 
-    return datetime.fromisoformat(target.replace("Z", "+00:00"))
+    return isoparse(target.replace("Z", "+00:00"))
 
 
 def to_iso8601(dt: datetime) -> str:
