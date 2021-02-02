@@ -20,7 +20,7 @@ jobs:
     - name: Lint
       run: |
         black --diff --check tdworkflow tests
-        isort --check-only
+        isort --check-only tdworkflow tests
     - name: Test with pytest
       run: |
         pytest
