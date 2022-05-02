@@ -4,8 +4,12 @@ Version History
 unreleased
 ----------
 
+v0.6.0 (2022-05-02)
+-------------------
+
 * Support ap02 site (#11)
 * Support ap03 site
+* Support Python 3.10 (#15)
 
 v0.5.1 (2020-07-15)
 -------------------
