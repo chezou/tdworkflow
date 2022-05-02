@@ -5,6 +5,7 @@ unreleased
 ----------
 
 * Support ap02 site (#11)
+* Support ap03 site
 
 v0.5.1 (2020-07-15)
 -------------------
