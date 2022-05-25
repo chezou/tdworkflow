@@ -29,13 +29,41 @@ logger = logging.getLogger(__name__)
 
 
 class WorkflowAPI:
-    def workflows(self) -> List[Workflow]:
+    def workflows(
+        self,
+        name_pattern: Optional[str] = None,
+        search_project_name: bool = False,
+        order: Optional[str] = None,
+        count: Optional[int] = None,
+        last_id: Optional[int] = None,
+    ) -> List[Workflow]:
         """List worlfows
 
+        :param name_pattern: Name pattern to be partially matched
+        :type name_pattern: Optional[str], optional
+        :param search_project_name: Flag to use name_pattern to search partial project name. Default False
+        :type search_project_name: bool
+        :param order: Sort order. 'asc' or 'dsc'. Default 'asc'
+        :type order: Optional[str]
+        :param count: Number of workflows to return
+        :type count: Optional[int], optional
+        :param last_id: List workflows whose id is grater than this id for pagination.
+        :type last_id: Optional[int], optional
         :return: List of Workflow
         :rtype: List[Workflow]
         """
-        res = self.get("workflows")
+        params = {}
+        if name_pattern:
+            params["name_pattern"] = name_pattern
+        if search_project_name:
+            params["search_project_name"] = search_project_name
+        if order:
+            params["order"] = order
+        if count:
+            params["count"] = count
+        if last_id:
+            params["last_id"] = last_id
+        res = self.get("workflows", params=params)
         if len(res) > 0:
             return [Workflow.from_api_repr(**wf) for wf in res["workflows"]]
         else:
@@ -66,19 +94,37 @@ class ProjectAPI:
         r = self.get(f"projects/{project_id}")
         return Project.from_api_repr(**r)
 
-    def projects(self, name: Optional[str] = None) -> List[Project]:
+    def projects(
+        self,
+        name: Optional[str] = None,
+        name_pattern: Optional[str] = None,
+        count: Optional[int] = None,
+        last_id: Optional[int] = None,
+    ) -> List[Project]:
         """List projects
 
         :param name: Project name
         :type name: Optional[str], optional
+        :param name_pattern: Name pattern to be partially matched
+        :type name_pattern: Optional[str], optional
+        :param count: Number of projects to return
+        :type count: Optional[int], optional
+        :param last_id: List projects whose id is grater than this id for pagination.
+        :type last_id: Optional[int], optional
         :return: List of Project
         :rtype: List[Project]
         """
-        params = None
+        params = {}
         if name:
-            params = {"name": name}
+            params["name"] = name
+        if name_pattern:
+            params["name_pattern"] = name_pattern
+        if count:
+            params["count"] = count
+        if last_id:
+            params["last_id"] = last_id
 
-        res = self.get(f"projects", params=params)
+        res = self.get("projects", params=params)
         if res:
             return [Project.from_api_repr(**proj) for proj in res["projects"]]
         else:
@@ -228,7 +274,7 @@ class ProjectAPI:
 
         :param project: Project ID or project object
         :param workflow: Workflow name or Workflow object
-        :param last_id: Last ID
+        :param last_id: List schedules whose id is grater than this id for pagination
         :return: List of Schedule
         """
         params = {}
@@ -343,8 +389,8 @@ class ProjectAPI:
 
         :param project: Project ID or Project object
         :param workflow: Workflow name or Workflow object
-        :param last_id: Last ID
-        :param page_size: Page size
+        :param last_id: List sessions whose id is grater than this id for pagination
+        :param page_size: Number of sessions to return
         :return: List of Session
         """
         params = {}
@@ -380,11 +426,11 @@ class AttemptAPI:
         :type project: Optional[Union[str, Project]]
         :param workflow: Workflow name or Workflow object, optional
         :type workflow: Optional[Union[str, Workflow]]
-        :param include_retried: Flag to include retried
+        :param include_retried: List more than 1 attempts per session
         :type include_retried: Optional[bool]
-        :param last_id: Last ID
+        :param last_id: List attempts whose id is grater than this id for pagination
         :type last_id: Optional[int]
-        :param page_size: Page size
+        :param page_size: Number of attempts to return
         :type page_size: Optional[int]
         :return: List of Attempt object
         :rtype: List[Attempt]
@@ -528,7 +574,7 @@ class ScheduleAPI:
     def schedules(self, last_id: Optional[int] = None) -> List[Schedule]:
         """List schedules
 
-        :param last_id: Last ID
+        :param last_id: List schedules whose id is grater than this id for pagination.
         :return: List of Schedule
         """
         r = self.get("schedules", params={"last_id": last_id})
@@ -649,8 +695,8 @@ class SessionAPI:
     ) -> List[Session]:
         """List sessions
 
-        :param last_id: Last ID
-        :param page_size: Page size
+        :param last_id: List sessions whose id is grater than this id for pagination
+        :param page_size: Number of sessions to return
         :return: List of Session
         """
         params = {}
@@ -687,8 +733,8 @@ class SessionAPI:
         """Get attempts of a session
 
         :param session: Session ID or Session object
-        :param last_id: Last ID
-        :param page_size: Page size
+        :param last_id: List attempts whose id is grater than this id for pagination
+        :param page_size: Number of attempts to return
         :return: List of Attempt
         """
         params = {}
