@@ -40,10 +40,10 @@ Usage
    # ['td.apikey', 'td.apiserver', "test"]
    client.delete_secrets(projects[0], ["test", "td.apiserver"])
 
-Uplaod Project from GitHub
+Upload Project from GitHub
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Before executing example code, you have to install git-python
+Before executing the example code, you have to install git-python
 
 .. code-block:: shell
 
@@ -100,14 +100,14 @@ If you want to open Treasure Workflow console on your browser, you can get the w
    workflows = client.project_workflows(project)
    workflows = list(filter(lambda w: w.name != "test", workflows))
    if workflows:
-       print(f"Project created! Open {CONSOLE_URL[site]}/{workflows[0].id}/info on your browser and clieck 'New Run' button.")
+       print(f"Project created! Open {CONSOLE_URL[site]}/{workflows[0].id}/info on your browser and click 'New Run' button.")
    else:
        print("Project creation failed.")
 
 Start workflow session
 ^^^^^^^^^^^^^^^^^^^^^^
 
-You can start workflow session by using ``Client.start_attempt``.
+You can start a workflow session by using ``Client.start_attempt``.
 
 .. code-block:: python
 
