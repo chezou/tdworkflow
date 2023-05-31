@@ -5,7 +5,7 @@ import re
 import tarfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Union
 
 logger = logging.getLogger(__name__)
 
@@ -34,15 +34,15 @@ def archive_files(target_dir: str, exclude_patterns: List[str]) -> io.BytesIO:
     return _bytes
 
 
-def parse_iso8601(target: str) -> Optional[datetime]:
+def parse_iso8601(target: Optional[str]) -> Optional[datetime]:
     if not target:
         return None
 
     return datetime.fromisoformat(target.replace("Z", "+00:00"))
 
 
-def to_iso8601(dt: datetime) -> str:
-    if not datetime:
+def to_iso8601(dt: Optional[Union[str, datetime]]) -> str:
+    if not dt:
         return ""
 
     if isinstance(dt, datetime):

@@ -23,6 +23,7 @@ jobs:
       run: |
         black --diff --check tdworkflow tests
         isort --check-only tdworkflow tests
+        mypy --install-types --non-interactive tdworkflow
     - name: Test with pytest
       run: |
         pytest

@@ -1,7 +1,7 @@
 import dataclasses
 import json
 from datetime import datetime
-from typing import Dict, List
+from typing import Any, Dict, List, Optional
 
 from .resource import Resource
 from .util import parse_iso8601
@@ -11,66 +11,66 @@ from .util import parse_iso8601
 class Task(Resource):
     id: int
     state: str
-    updatedAt: datetime = None
+    updatedAt: Optional[datetime] = None
     fullName: str = ""
-    parentId: int = None
-    upstreams: List[int] = None
-    retryAt: datetime = None
-    config: Dict = None
-    exportParams: Dict = None
-    storeParams: Dict = None
-    stateParams: Dict = None
-    error: Dict = None
-    startedAt: datetime = None
+    parentId: Optional[int] = None
+    upstreams: Optional[List[int]] = None
+    retryAt: Optional[datetime] = None
+    config: Optional[Dict[str, Any]] = None
+    exportParams: Optional[Dict[str, Any]] = None
+    storeParams: Optional[Dict[str, Any]] = None
+    stateParams: Optional[Dict[str, Any]] = None
+    error: Optional[Dict[str, Any]] = None
+    startedAt: Optional[datetime] = None
     cancelRequested: bool = False
     isGroup: bool = False
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.id = int(self.id)
-        self.updatedAt = parse_iso8601(self.updatedAt)
+        self.updatedAt = parse_iso8601(self.updatedAt)  # type: ignore
         self.parentId = int(self.parentId) if self.parentId else None
-        self.upstreams = [int(_id) for _id in self.upstreams]
-        self.retryAt = parse_iso8601(self.retryAt)
-        self.startedAt = parse_iso8601(self.startedAt)
+        self.upstreams = [int(_id) for _id in self.upstreams] if self.upstreams else []
+        self.retryAt = parse_iso8601(self.retryAt)  # type: ignore
+        self.startedAt = parse_iso8601(self.startedAt)  # type: ignore
 
     @property
-    def updated_at(self):
+    def updated_at(self) -> Optional[datetime]:
         return self.updatedAt
 
     @property
-    def full_name(self):
+    def full_name(self) -> str:
         return self.fullName
 
     @property
-    def parent_id(self):
+    def parent_id(self) -> Optional[int]:
         return self.parentId
 
     @property
-    def retry_at(self):
+    def retry_at(self) -> Optional[datetime]:
         return self.retryAt
 
     @property
-    def export_params(self):
+    def export_params(self) -> Optional[Dict[str, Any]]:
         return self.exportParams
 
     @property
-    def store_params(self):
+    def store_params(self) -> Optional[Dict[str, Any]]:
         return self.storeParams
 
     @property
-    def state_params(self):
+    def state_params(self) -> Optional[Dict[str, Any]]:
         return self.stateParams
 
     @property
-    def started_at(self):
+    def started_at(self) -> Optional[datetime]:
         return self.startedAt
 
     @property
-    def cancel_requested(self):
+    def cancel_requested(self) -> bool:
         return self.cancelRequested
 
     @property
-    def group(self):
+    def group(self) -> bool:
         return self.isGroup
 
 
