@@ -1,5 +1,6 @@
 import dataclasses
 from datetime import datetime
+from typing import Optional
 
 from .attempt import Attempt
 from .project import Project
@@ -14,24 +15,24 @@ class Session(Resource):
     project: Project
     workflow: Workflow
     sessionUuid: str
-    sessionTime: datetime = None
-    lastAttempt: Attempt = None
+    sessionTime: Optional[datetime] = None
+    lastAttempt: Optional[Attempt] = None
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.id = int(self.id)
-        self.project = Project(**self.project)
-        self.workflow = Workflow(**self.workflow)
-        self.sessionTime = parse_iso8601(self.sessionTime)
-        self.lastAttempt = Attempt(**self.lastAttempt)
+        self.project = Project(**self.project)  # type: ignore
+        self.workflow = Workflow(**self.workflow)  # type: ignore
+        self.sessionTime = parse_iso8601(self.sessionTime)  # type: ignore
+        self.lastAttempt = Attempt(**self.lastAttempt)  # type: ignore
 
     @property
-    def session_uuid(self):
+    def session_uuid(self) -> str:
         return self.sessionUuid
 
     @property
-    def session_time(self):
+    def session_time(self) -> Optional[datetime]:
         return self.session_time
 
     @property
-    def last_attempt(self):
+    def last_attempt(self) -> Optional[Attempt]:
         return self.lastAttempt

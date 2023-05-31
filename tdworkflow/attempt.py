@@ -1,6 +1,6 @@
 import dataclasses
 from datetime import datetime
-from typing import Dict
+from typing import Any, Dict, Optional
 
 from .project import Project
 from .resource import Resource
@@ -13,22 +13,22 @@ class Attempt(Resource):
     id: int
     sessionId: int = -1
     sessionUuid: str = ""
-    sessionTime: datetime = None
-    workflow: Workflow = None
-    project: Project = None
+    sessionTime: Optional[datetime] = None
+    workflow: Optional[Workflow] = None
+    project: Optional[Project] = None
     index: int = -1
     retryAttemptName: str = ""
     done: bool = False
     success: bool = False
     cancelRequested: bool = False
-    params: Dict = None
-    createdAt: datetime = None
-    finishedAt: datetime = None
+    params: Optional[Dict[str, Any]] = None
+    createdAt: Optional[datetime] = None
+    finishedAt: Optional[datetime] = None
     status: str = ""
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         self.id = int(self.id)
-        self.sessionTime = parse_iso8601(self.sessionTime)
+        self.sessionTime = parse_iso8601(self.sessionTime)  # type: ignore
         if self.project and isinstance(self.project, dict):
             self.project = Project(**self.project)
         if self.workflow and isinstance(self.workflow, dict):
@@ -36,38 +36,38 @@ class Attempt(Resource):
         self.done = bool(self.done)
         self.success = bool(self.success)
         self.cancelRequested = bool(self.cancelRequested)
-        self.createdAt = parse_iso8601(self.createdAt)
-        self.finishedAt = parse_iso8601(self.finishedAt)
+        self.createdAt = parse_iso8601(self.createdAt)  # type: ignore
+        self.finishedAt = parse_iso8601(self.finishedAt)  # type: ignore
         self.status = self.status
 
     @property
-    def session_id(self):
+    def session_id(self) -> int:
         return self.sessionId
 
     @property
-    def session_uuid(self):
+    def session_uuid(self) -> str:
         return self.sessionUuid
 
     @property
-    def session_time(self):
+    def session_time(self) -> Optional[datetime]:
         return self.sessionTime
 
     @property
-    def retry_attempt_name(self):
+    def retry_attempt_name(self) -> str:
         return self.retryAttemptName
 
     @property
-    def cancel_requested(self):
+    def cancel_requested(self) -> bool:
         return self.cancelRequested
 
     @property
-    def finished_at(self):
+    def finished_at(self) -> Optional[datetime]:
         return self.finishedAt
 
-    def finished(self):
+    def finished(self) -> bool:
         return bool(self.finished_at)
 
-    def update(self, **args):
+    def update(self, **args: Any) -> None:
         other_attempt = Attempt(**args)
         self.id = other_attempt.id
         self.sessionId = other_attempt.sessionId

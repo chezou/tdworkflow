@@ -6,7 +6,7 @@ import os
 import time
 import uuid
 from datetime import datetime
-from typing import Any, BinaryIO, Dict, List, Optional, Tuple, Union
+from typing import Any, BinaryIO, Callable, Dict, List, Optional, Tuple, Union, cast
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -29,6 +29,8 @@ logger = logging.getLogger(__name__)
 
 
 class WorkflowAPI:
+    get: Callable
+
     def workflows(
         self,
         name_pattern: Optional[str] = None,
@@ -52,7 +54,7 @@ class WorkflowAPI:
         :return: List of Workflow
         :rtype: List[Workflow]
         """
-        params = {}
+        params = {}  # type: Dict[str, Union[str, bool, int, None]]
         if name_pattern:
             params["name_pattern"] = name_pattern
         if search_project_name:
@@ -83,6 +85,10 @@ class WorkflowAPI:
 
 
 class ProjectAPI:
+    get: Callable
+    put: Callable
+    delete: Callable
+
     def project(self, project: Union[int, Project]) -> Project:
         """Get a project
 
@@ -114,7 +120,7 @@ class ProjectAPI:
         :return: List of Project
         :rtype: List[Project]
         """
-        params = {}
+        params = {}  # type: Dict[str, Union[str, int, None]]
         if name:
             params["name"] = name
         if name_pattern:
@@ -147,7 +153,7 @@ class ProjectAPI:
         :return: List of Workflow
         :rtype: List[Workflow]
         """
-        params = {}
+        params = {}  # type: Dict[str, Union[str, int, None]]
         if workflow:
             workflow_name = (
                 workflow.name if isinstance(workflow, Workflow) else workflow
@@ -277,7 +283,7 @@ class ProjectAPI:
         :param last_id: List schedules whose id is grater than this id for pagination
         :return: List of Schedule
         """
-        params = {}
+        params = {}  # type: Dict[str, Union[str, int, None]]
         if workflow:
             workflow_name = (
                 workflow.name if isinstance(workflow, Workflow) else workflow
@@ -393,7 +399,7 @@ class ProjectAPI:
         :param page_size: Number of sessions to return
         :return: List of Session
         """
-        params = {}
+        params = {}  # type: Dict[str, Union[str, int, None]]
         if workflow:
             workflow_name = (
                 workflow.name if isinstance(workflow, Workflow) else workflow
@@ -412,6 +418,10 @@ class ProjectAPI:
 
 
 class AttemptAPI:
+    get: Callable
+    put: Callable
+    post: Callable
+
     def attempts(
         self,
         project: Optional[Union[str, Project]] = None,
@@ -435,7 +445,7 @@ class AttemptAPI:
         :return: List of Attempt object
         :rtype: List[Attempt]
         """
-        params = {}
+        params = {}  # type: Dict[str, Union[str, bool, int, None]]
         if project:
             project_name = project.name if isinstance(project, Project) else project
             params.update({"project": project_name})
@@ -443,7 +453,7 @@ class AttemptAPI:
             workflow_name = (
                 workflow.name if isinstance(workflow, Workflow) else workflow
             )
-            params.upadte({"workflow": workflow_name})
+            params.update({"workflow": workflow_name})
         if include_retried:
             params.update({"include_retried": include_retried})
         if last_id:
@@ -474,7 +484,11 @@ class AttemptAPI:
             raise ValueError(f"Unable to find attempt id {attempt_id}")
 
         if inplace:
-            attempt.update(**r)
+            if isinstance(attempt, int):
+                raise ValueError(f"Unable to use inplace with integer value {attempt=}")
+            else:
+                attempt.update(**r)
+            return None
         else:
             return Attempt.from_api_repr(**r)
 
@@ -518,7 +532,9 @@ class AttemptAPI:
         :return:
         """
         workflow_id = workflow.id if isinstance(workflow, Workflow) else workflow
-        _params = {"workflowId": workflow_id}
+        _params = {
+            "workflowId": workflow_id
+        }  # type: Dict[str, Union[str, int, Dict, None]]
         workflow_params = workflow_params if workflow_params else {}
         _params.update({"params": workflow_params})
         if not session_time:
@@ -548,6 +564,7 @@ class AttemptAPI:
         self.post(f"attempts/{attempt_id}/kill", content=True)
         if inplace:
             self.attempt(attempt, inplace=True)
+            return None
         else:
             return self.attempt(attempt)
 
@@ -563,6 +580,9 @@ class AttemptAPI:
         :return: Latest status of Attempt
         :rtype: Attempt
         """
+        if isinstance(attempt, int):
+            attempt = cast(Attempt, self.attempt(attempt))
+
         while not attempt.done:
             time.sleep(wait_interval)
             self.attempt(attempt, inplace=True)
@@ -571,6 +591,9 @@ class AttemptAPI:
 
 
 class ScheduleAPI:
+    get: Callable
+    post: Callable
+
     def schedules(self, last_id: Optional[int] = None) -> List[Schedule]:
         """List schedules
 
@@ -614,7 +637,7 @@ class ScheduleAPI:
         :param count: Count
         :return: ScheduleAttempt
         """
-        params = {}
+        params = {}  # type: Dict[str, Union[str, int, None]]
         if from_time:
             params["fromTime"] = to_iso8601(from_time)
         if attempt_name:
@@ -673,7 +696,7 @@ class ScheduleAPI:
         :param dry_run: Flag for dry run
         :return: New Schedule
         """
-        params = {}
+        params = {}  # type: Dict[str, Union[str, datetime, bool, None]]
         if from_time:
             params["fromTime"] = to_iso8601(from_time)
         if next_time:
@@ -690,6 +713,8 @@ class ScheduleAPI:
 
 
 class SessionAPI:
+    get: Callable
+
     def sessions(
         self, last_id: Optional[int] = None, page_size: Optional[int] = None
     ) -> List[Session]:
@@ -752,6 +777,8 @@ class SessionAPI:
 
 
 class LogAPI:
+    get: Callable
+
     def log_files(
         self,
         attempt: Union[Attempt, int],
@@ -765,7 +792,7 @@ class LogAPI:
         :param direct_download: Flag for direct download
         :return: List of LogFile
         """
-        params = {}
+        params = {}  # type: Dict[str, Union[int, str, bool, None]]
         if task:
             params["task"] = task
         if direct_download:
@@ -778,7 +805,9 @@ class LogAPI:
         else:
             return []
 
-    def log_file(self, attempt: Union[Attempt, int], file: Union[LogFile, str]) -> str:
+    def log_file(
+        self, attempt: Union[Attempt, int], file: Union[LogFile, str]
+    ) -> Union[bytes, str]:
         """Get a log string for an attempt
 
         :param attempt: Target Attempt id or Attempt object
@@ -796,7 +825,7 @@ class LogAPI:
         else:
             raise ValueError(f"Unable to get file: {file_name}")
 
-    def logs(self, attempt: Union[Attempt, int]) -> List[str]:
+    def logs(self, attempt: Union[Attempt, int]) -> List[Union[bytes, str]]:
         """Get log string list for an attempt
 
         :param attempt: Attempt ID or Attempt object
@@ -900,7 +929,7 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         self.api_base = f"{scheme}://{self.endpoint}/api/"
 
     @property
-    def http(self):
+    def http(self) -> requests.Session:
         """
         :return: Established session
         :rtype: requests.Session
@@ -923,7 +952,7 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         """
         url = f"{self.api_base}{path}"
         r = self.http.get(url, params=params)
-        logger.debug(f"{r.status_code}\n{r.content}")
+        logger.debug(f"{r.status_code!r}\n{r.content!r}")
 
         if not 200 <= r.status_code < 300:
             exceptions.raise_response_error(r)
@@ -948,7 +977,7 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         """
         url = f"{self.api_base}{path}"
         r = self.http.post(url, json=body)
-        logger.debug(f"{r.status_code}\n{r.content}")
+        logger.debug(f"{r.status_code!r}\n{r.content!r}")
 
         if not 200 <= r.status_code < 300:
             exceptions.raise_response_error(r)
@@ -958,10 +987,12 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         elif r.content and "application/json" in r.headers.get("Content-Type", ""):
             return r.json()
 
+        return None
+
     def put(
         self,
         path: str,
-        data: Optional[Union[Dict, List[Tuple], BinaryIO]] = None,
+        data: Optional[Union[str, Dict, List[Tuple], BinaryIO]] = None,
         _json: Optional[Dict[str, str]] = None,
         params: Optional[Dict[str, str]] = None,
     ) -> Optional[Dict[str, str]]:
@@ -970,7 +1001,7 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         :param path: Treasure Workflow API path
         :type path: str
         :param data: Content body
-        :type data: Optional[Union[Dict, List[Tuple], BinaryIO]], oprional
+        :type data: Optional[str, Union[Dict, List[Tuple], BinaryIO]], optional
         :param _json: Content body as JSON
         :type _json: Optional[Dict[str, str]], optional
         :param params: Query parameters
@@ -986,14 +1017,16 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         if not _json and data and hasattr(data, "read"):
             headers["Content-Type"] = "application/gzip"
 
-        r = self.http.put(url, data=data, headers=headers, params=params)
-        logger.debug(f"{r.status_code}\n{r.content}")
+        r = self.http.put(url, data=data, headers=headers, params=params)  # type: ignore
+        logger.debug(f"{r.status_code!r}\n{r.content!r}")
 
         if not 200 <= r.status_code < 300:
             exceptions.raise_response_error(r)
 
         if r.content and "application/json" in r.headers.get("Content-Type", ""):
             return r.json()
+
+        return None
 
     def delete(
         self, path: str, params: Optional[Dict[str, str]] = None
@@ -1010,10 +1043,12 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         url = f"{self.api_base}{path}"
 
         r = self.http.delete(url, params=params)
-        logger.debug(f"{r.status_code}\n{r.content}")
+        logger.debug(f"{r.status_code!r}\n{r.content!r}")
 
         if not 200 <= r.status_code < 300:
             exceptions.raise_response_error(r)
 
         if r.content and "application/json" in r.headers.get("Content-Type", ""):
             return r.json()
+
+        return None
