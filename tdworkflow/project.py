@@ -19,9 +19,12 @@ class Project(Resource):
 
     def __post_init__(self) -> None:
         self.id = int(self.id)
-        self.createdAt = parse_iso8601(self.createdAt)  # type: ignore
-        self.deletedAt = parse_iso8601(self.deletedAt)  # type: ignore
-        self.updatedAt = parse_iso8601(self.updatedAt)  # type: ignore
+        if self.createdAt and isinstance(self.createdAt, str):
+            self.createdAt = parse_iso8601(self.createdAt)
+        if self.deletedAt and isinstance(self.deletedAt, str):
+            self.deletedAt = parse_iso8601(self.deletedAt)
+        if self.updatedAt and isinstance(self.updatedAt, str):
+            self.updatedAt = parse_iso8601(self.updatedAt)
 
     @property
     def archive_type(self) -> str:

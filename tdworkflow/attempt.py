@@ -28,7 +28,8 @@ class Attempt(Resource):
 
     def __post_init__(self) -> None:
         self.id = int(self.id)
-        self.sessionTime = parse_iso8601(self.sessionTime)  # type: ignore
+        if self.sessionTime and isinstance(self.sessionTime, str):
+            self.sessionTime = parse_iso8601(self.sessionTime)
         if self.project and isinstance(self.project, dict):
             self.project = Project(**self.project)
         if self.workflow and isinstance(self.workflow, dict):
@@ -36,8 +37,10 @@ class Attempt(Resource):
         self.done = bool(self.done)
         self.success = bool(self.success)
         self.cancelRequested = bool(self.cancelRequested)
-        self.createdAt = parse_iso8601(self.createdAt)  # type: ignore
-        self.finishedAt = parse_iso8601(self.finishedAt)  # type: ignore
+        if self.createdAt and isinstance(self.createdAt, str):
+            self.createdAt = parse_iso8601(self.createdAt)
+        if self.finishedAt and isinstance(self.finishedAt, str):
+            self.finishedAt = parse_iso8601(self.finishedAt)
         self.status = self.status
 
     @property

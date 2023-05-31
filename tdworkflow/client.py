@@ -9,6 +9,7 @@ from datetime import datetime
 from typing import Any, BinaryIO, Callable, Dict, List, Optional, Tuple, Union, cast
 
 import requests
+from mypy_extensions import DefaultArg
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
@@ -27,9 +28,17 @@ from .workflow import Workflow
 
 logger = logging.getLogger(__name__)
 
+GetResponse = Union[Dict[str, Any], bytes]
+PostResponse = Optional[Union[Dict[str, Any], bytes]]
+PutResponse = Optional[Dict[str, Any]]
+DeleteResponse = Optional[Dict[str, Any]]
+Params = Dict[str, Union[str, bool, int, None]]
+DataType = Union[str, Dict[str, Any], List[Tuple[Any]], BinaryIO]
+ListOfDict = Dict[str, List[Dict[str, Any]]]
+
 
 class WorkflowAPI:
-    get: Callable
+    get: Callable[[str, DefaultArg(Params, "params")], GetResponse]
 
     def workflows(
         self,
@@ -65,7 +74,7 @@ class WorkflowAPI:
             params["count"] = count
         if last_id:
             params["last_id"] = last_id
-        res = self.get("workflows", params=params)
+        res = cast(ListOfDict, self.get("workflows", params=params))
         if len(res) > 0:
             return [Workflow.from_api_repr(**wf) for wf in res["workflows"]]
         else:
@@ -80,14 +89,24 @@ class WorkflowAPI:
         :rtype: Workflow
         """
         workflow_id = workflow.id if isinstance(workflow, Workflow) else workflow
-        res = self.get(f"workflows/{workflow_id}")
+        res = cast(Dict[str, Any], self.get(f"workflows/{workflow_id}"))
         return Workflow.from_api_repr(**res)
 
 
 class ProjectAPI:
-    get: Callable
-    put: Callable
-    delete: Callable
+    get: Callable[
+        [str, DefaultArg(Params, "params"), DefaultArg(bool, "content")], GetResponse
+    ]
+    put: Callable[
+        [
+            str,
+            DefaultArg(DataType, "data"),
+            DefaultArg(Dict[str, Any], "_json"),
+            DefaultArg(Dict[str, str], "params"),
+        ],
+        PutResponse,
+    ]
+    delete: Callable[[Any], DeleteResponse]
 
     def project(self, project: Union[int, Project]) -> Project:
         """Get a project
@@ -97,7 +116,7 @@ class ProjectAPI:
         :return: A Project
         """
         project_id = project.id if isinstance(project, Project) else project
-        r = self.get(f"projects/{project_id}")
+        r = cast(Dict[str, Any], self.get(f"projects/{project_id}"))
         return Project.from_api_repr(**r)
 
     def projects(
@@ -130,7 +149,7 @@ class ProjectAPI:
         if last_id:
             params["last_id"] = last_id
 
-        res = self.get("projects", params=params)
+        res = cast(ListOfDict, self.get("projects", params=params))
         if res:
             return [Project.from_api_repr(**proj) for proj in res["projects"]]
         else:
@@ -162,7 +181,9 @@ class ProjectAPI:
         if revision:
             params["revision"] = revision
         project_id = project.id if isinstance(project, Project) else project
-        r = self.get(f"projects/{project_id}/workflows", params=params)
+        r = cast(
+            ListOfDict, self.get(f"projects/{project_id}/workflows", params=params)
+        )
         if r:
             return [Workflow.from_api_repr(**wf) for wf in r["workflows"]]
         else:
@@ -202,7 +223,7 @@ class ProjectAPI:
         else:
             exclude_patterns = default_excludes
         data = archive_files(target_dir, exclude_patterns)
-        r = self.put("projects", params=params, data=data)
+        r = cast(Dict[str, Any], self.put("projects", params=params, data=data))
 
         if r:
             return Project.from_api_repr(**r)
@@ -235,9 +256,12 @@ class ProjectAPI:
         :param revision: Revision name
         :return: ``True`` if succeeded
         """
-        params = {"revision": revision} if revision else {}
+        params = {"revision": revision} if revision else {}  # type: Params
         project_id = project.id if isinstance(project, Project) else project
-        res = self.get(f"projects/{project_id}/archive", params=params, content=True)
+        res = cast(
+            bytes,
+            self.get(f"projects/{project_id}/archive", params=params, content=True),
+        )
 
         # File will be downloaded as tar.gz format
         with open(file_path, "wb") as f:
@@ -264,7 +288,7 @@ class ProjectAPI:
         :return: List of Revision
         """
         project_id = project.id if isinstance(project, Project) else project
-        res = self.get(f"projects/{project_id}/revisions")
+        res = cast(ListOfDict, self.get(f"projects/{project_id}/revisions"))
         if res:
             return [Revision.from_api_repr(**rev) for rev in res["revisions"]]
         else:
@@ -292,7 +316,9 @@ class ProjectAPI:
         if last_id:
             params["last_id"] = last_id
         project_id = project.id if isinstance(project, Project) else project
-        res = self.get(f"projects/{project_id}/schedules", params=params)
+        res = cast(
+            ListOfDict, self.get(f"projects/{project_id}/schedules", params=params)
+        )
         if res:
             return [Schedule.from_api_repr(**s) for s in res["schedules"]]
         else:
@@ -332,7 +358,9 @@ class ProjectAPI:
         :rtype: List[str]
         """
         project_id = project.id if isinstance(project, Project) else project
-        r = self.get(f"projects/{project_id}/secrets/")
+        r = cast(
+            Dict[str, List[Dict[str, str]]], self.get(f"projects/{project_id}/secrets/")
+        )
         if r is None or len(r) == 0:
             return []
         else:
@@ -410,7 +438,7 @@ class ProjectAPI:
         if page_size:
             params["page_size"] = page_size
         project_id = project.id if isinstance(project, Project) else project
-        r = self.get(f"projects/{project_id}/sessions")
+        r = cast(ListOfDict, self.get(f"projects/{project_id}/sessions"))
         if r:
             return [Session.from_api_repr(**s) for s in r["sessions"]]
         else:
@@ -418,9 +446,19 @@ class ProjectAPI:
 
 
 class AttemptAPI:
-    get: Callable
-    put: Callable
-    post: Callable
+    get: Callable[[str, DefaultArg(Params, "params")], GetResponse]
+    put: Callable[
+        [
+            str,
+            DefaultArg(DataType, "data"),
+            DefaultArg(Dict[str, Any], "_json"),
+            DefaultArg(Dict[str, str], "params"),
+        ],
+        PutResponse,
+    ]
+    post: Callable[
+        [str, DefaultArg(Any, "body"), DefaultArg(bool, "content")], PostResponse
+    ]
 
     def attempts(
         self,
@@ -461,7 +499,7 @@ class AttemptAPI:
         if page_size:
             params.update({"page_size": page_size})
 
-        r = self.get("attempts", params=params)
+        r = cast(Optional[ListOfDict], self.get("attempts", params=params))
         res = (
             [Attempt.from_api_repr(**attempt) for attempt in r["attempts"]] if r else []
         )
@@ -479,7 +517,7 @@ class AttemptAPI:
         :rtype: :class:`Attempt`
         """
         attempt_id = attempt.id if isinstance(attempt, Attempt) else attempt
-        r = self.get(f"attempts/{attempt_id}")
+        r = cast(Dict[str, Any], self.get(f"attempts/{attempt_id}"))
         if not r:
             raise ValueError(f"Unable to find attempt id {attempt_id}")
 
@@ -500,7 +538,7 @@ class AttemptAPI:
         """
 
         attempt_id = attempt.id if isinstance(attempt, Attempt) else attempt
-        r = self.get(f"attempts/{attempt_id}/tasks")
+        r = cast(Optional[ListOfDict], self.get(f"attempts/{attempt_id}/tasks"))
         res = [Task.from_api_repr(**task) for task in r["tasks"]] if r else []
         return res
 
@@ -512,7 +550,7 @@ class AttemptAPI:
         """
 
         attempt_id = attempt.id if isinstance(attempt, Attempt) else attempt
-        r = self.get(f"attempts/{attempt_id}/retries")
+        r = cast(Optional[ListOfDict], self.get(f"attempts/{attempt_id}/retries"))
         res = [Attempt(**attempt) for attempt in r["attempts"]] if r else []
         return res
 
@@ -532,9 +570,7 @@ class AttemptAPI:
         :return:
         """
         workflow_id = workflow.id if isinstance(workflow, Workflow) else workflow
-        _params = {
-            "workflowId": workflow_id
-        }  # type: Dict[str, Union[str, int, Dict, None]]
+        _params = {"workflowId": workflow_id}  # type: Dict[str, Any]
         workflow_params = workflow_params if workflow_params else {}
         _params.update({"params": workflow_params})
         if not session_time:
@@ -591,8 +627,10 @@ class AttemptAPI:
 
 
 class ScheduleAPI:
-    get: Callable
-    post: Callable
+    get: Callable[[str, DefaultArg(Params, "params")], GetResponse]
+    post: Callable[
+        [str, DefaultArg(Any, "body"), DefaultArg(bool, "content")], PostResponse
+    ]
 
     def schedules(self, last_id: Optional[int] = None) -> List[Schedule]:
         """List schedules
@@ -600,7 +638,7 @@ class ScheduleAPI:
         :param last_id: List schedules whose id is grater than this id for pagination.
         :return: List of Schedule
         """
-        r = self.get("schedules", params={"last_id": last_id})
+        r = cast(ListOfDict, self.get("schedules", params={"last_id": last_id}))
         if r:
             return [Schedule.from_api_repr(**s) for s in r["schedules"]]
         else:
@@ -613,7 +651,7 @@ class ScheduleAPI:
         :return: Schedule
         """
         schedule_id = schedule.id if isinstance(schedule, Schedule) else schedule
-        r = self.get(f"schedules/{schedule_id}")
+        r = cast(Dict[str, Any], self.get(f"schedules/{schedule_id}"))
         if r:
             return Schedule.from_api_repr(**r)
         else:
@@ -647,7 +685,9 @@ class ScheduleAPI:
         params["dryRun"] = dry_run
 
         schedule_id = schedule.id if isinstance(schedule, Schedule) else schedule
-        r = self.post(f"schedules/{schedule_id}/backfill", body=params)
+        r = cast(
+            Dict[str, Any], self.post(f"schedules/{schedule_id}/backfill", body=params)
+        )
         if r:
             return ScheduleAttempt.from_api_repr(**r)
         else:
@@ -660,7 +700,7 @@ class ScheduleAPI:
         :return: New Schedule
         """
         schedule_id = schedule.id if isinstance(schedule, Schedule) else schedule
-        r = self.post(f"schedules/{schedule_id}/disable")
+        r = cast(Dict[str, Any], self.post(f"schedules/{schedule_id}/disable"))
         if r:
             return Schedule.from_api_repr(**r)
         else:
@@ -673,7 +713,7 @@ class ScheduleAPI:
         :return: New Schedule
         """
         schedule_id = schedule.id if isinstance(schedule, Schedule) else schedule
-        r = self.post(f"schedules/{schedule_id}/enable")
+        r = cast(Dict[str, Any], self.post(f"schedules/{schedule_id}/enable"))
         if r:
             return Schedule.from_api_repr(**r)
         else:
@@ -705,7 +745,9 @@ class ScheduleAPI:
             params["nextRunTime"] = to_iso8601(next_run_time)
         params["dryRun"] = dry_run
         schedule_id = schedule.id if isinstance(schedule, Schedule) else schedule
-        r = self.post(f"schedules/{schedule_id}/skip", body=params)
+        r = cast(
+            Dict[str, Any], self.post(f"schedules/{schedule_id}/skip", body=params)
+        )
         if r:
             return Schedule.from_api_repr(**r)
         else:
@@ -713,7 +755,7 @@ class ScheduleAPI:
 
 
 class SessionAPI:
-    get: Callable
+    get: Callable[[str, DefaultArg(Params, "params"), DefaultArg(bool, "content")], Any]
 
     def sessions(
         self, last_id: Optional[int] = None, page_size: Optional[int] = None
@@ -724,13 +766,13 @@ class SessionAPI:
         :param page_size: Number of sessions to return
         :return: List of Session
         """
-        params = {}
+        params = {}  # type: Params
         if last_id:
             params["last_id"] = last_id
         if page_size:
             params["page_size"] = page_size
 
-        r = self.get("sessions", params=params)
+        r = cast(ListOfDict, self.get("sessions", params=params))
         if r:
             return [Session(**s) for s in r["sessions"]]
         else:
@@ -762,7 +804,7 @@ class SessionAPI:
         :param page_size: Number of attempts to return
         :return: List of Attempt
         """
-        params = {}
+        params = {}  # type: Params
         if last_id:
             params["last_id"] = last_id
         if page_size:
@@ -777,7 +819,9 @@ class SessionAPI:
 
 
 class LogAPI:
-    get: Callable
+    get: Callable[
+        [str, DefaultArg(Params, "params"), DefaultArg(bool, "content")], GetResponse
+    ]
 
     def log_files(
         self,
@@ -799,7 +843,7 @@ class LogAPI:
             params["direct_download"] = True
 
         attempt_id = attempt.id if isinstance(attempt, Attempt) else attempt
-        r = self.get(f"logs/{attempt_id}/files")
+        r = cast(ListOfDict, self.get(f"logs/{attempt_id}/files"))
         if r:
             return [LogFile.from_api_repr(**l) for l in r["files"]]
         else:
@@ -817,7 +861,7 @@ class LogAPI:
 
         attempt_id = attempt.id if isinstance(attempt, Attempt) else attempt
         file_name = file.file_name if isinstance(file, LogFile) else file
-        r = self.get(f"logs/{attempt_id}/files/{file_name}", content=True)
+        r = cast(bytes, self.get(f"logs/{attempt_id}/files/{file_name}", content=True))
         if r:
             gzfile = io.BytesIO(r)
             with gzip.open(gzfile, "rt") as f:
@@ -937,14 +981,14 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         return self._http
 
     def get(
-        self, path: str, params: Optional[Dict[str, str]] = None, content: bool = False
-    ) -> Union[Dict[str, str], bytes]:
+        self, path: str, params: Optional[Params] = None, content: bool = False
+    ) -> GetResponse:
         """GET operator for REST API
 
         :param path: Treasure Workflow API path
         :type path: str
         :param params: Query parameters, defaults to None
-        :type params: Optional[Dict[str, str]], optional
+        :type params: Optional[Dict[str, Union[str, bool, int, None]]], optional
         :param content: Return content body without parsing JSON if ``True``
         :type content: bool
         :return: Response data in JSON or bytes
@@ -960,17 +1004,17 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         if content:
             return r.content
         else:
-            return r.json()
+            return cast(Dict[str, Any], r.json())
 
     def post(
-        self, path: str, body: Optional[Dict[str, str]] = None, content: bool = False
-    ) -> Optional[Union[Dict[str, str], bytes]]:
+        self, path: str, body: Optional[Dict[str, Any]] = None, content: bool = False
+    ) -> PostResponse:
         """POST operator for REST API
 
         :param path: Treasure Workflow API path
         :type path: str
         :param body: Content body in dictionary to be passed in JSON
-        :type body: Optional[Dict[str, str]], optional
+        :type body: Optional[Dict[str, Any]], optional
         :param content: Return content body without parsing JSON if ``True``
         :type content: bool
         :return: ``True`` if succeeded
@@ -985,17 +1029,17 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         if content:
             return r.content
         elif r.content and "application/json" in r.headers.get("Content-Type", ""):
-            return r.json()
+            return cast(Dict[str, str], r.json())
 
         return None
 
     def put(
         self,
         path: str,
-        data: Optional[Union[str, Dict, List[Tuple], BinaryIO]] = None,
-        _json: Optional[Dict[str, str]] = None,
+        data: Optional[DataType] = None,
+        _json: Optional[Dict[str, Any]] = None,
         params: Optional[Dict[str, str]] = None,
-    ) -> Optional[Dict[str, str]]:
+    ) -> PutResponse:
         """PUT operator for REST API
 
         :param path: Treasure Workflow API path
@@ -1003,7 +1047,7 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         :param data: Content body
         :type data: Optional[str, Union[Dict, List[Tuple], BinaryIO]], optional
         :param _json: Content body as JSON
-        :type _json: Optional[Dict[str, str]], optional
+        :type _json: Optional[Dict[str, Any]], optional
         :param params: Query parameters
         :type params: Optional[Dict[str, str]], optional
         :return: Response content
@@ -1024,13 +1068,13 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
             exceptions.raise_response_error(r)
 
         if r.content and "application/json" in r.headers.get("Content-Type", ""):
-            return r.json()
+            return cast(Dict[str, str], r.json())
 
         return None
 
     def delete(
         self, path: str, params: Optional[Dict[str, str]] = None
-    ) -> Optional[Dict[str, str]]:
+    ) -> DeleteResponse:
         """DELETE operator for REST API
 
         :param path: Treasure Workflow API path
@@ -1049,6 +1093,6 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
             exceptions.raise_response_error(r)
 
         if r.content and "application/json" in r.headers.get("Content-Type", ""):
-            return r.json()
+            return cast(Dict[str, str], r.json())
 
         return None

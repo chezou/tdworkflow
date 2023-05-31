@@ -16,7 +16,8 @@ class LogFile(Resource):
     fileTime: Optional[datetime] = None
 
     def __post_init__(self) -> None:
-        self.fileTime = parse_iso8601(self.fileTime)  # type: ignore
+        if self.fileTime and isinstance(self.fileTime, str):
+            self.fileTime = parse_iso8601(self.fileTime)
 
     @property
     def file_name(self) -> str:

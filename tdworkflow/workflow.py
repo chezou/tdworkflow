@@ -21,10 +21,14 @@ class Workflow(Resource):
 
     def __post_init__(self) -> None:
         self.id = int(self.id)
-        self.project = Project(**self.project) if self.project else None  # type: ignore
-        self.createdAt = parse_iso8601(self.createdAt)  # type: ignore
-        self.deletedAt = parse_iso8601(self.deletedAt)  # type: ignore
-        self.updatedAt = parse_iso8601(self.updatedAt)  # type: ignore
+        if self.project and isinstance(self.project, dict):
+            self.project = Project(**self.project)
+        if self.createdAt and isinstance(self.createdAt, str):
+            self.createdAt = parse_iso8601(self.createdAt)
+        if self.deletedAt and isinstance(self.deletedAt, str):
+            self.deletedAt = parse_iso8601(self.deletedAt)
+        if self.updatedAt and isinstance(self.updatedAt, str):
+            self.updatedAt = parse_iso8601(self.updatedAt)
 
     @property
     def created_at(self) -> Optional[datetime]:

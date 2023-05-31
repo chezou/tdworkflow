@@ -27,11 +27,14 @@ class Task(Resource):
 
     def __post_init__(self) -> None:
         self.id = int(self.id)
-        self.updatedAt = parse_iso8601(self.updatedAt)  # type: ignore
+        if self.updatedAt and isinstance(self.updatedAt, str):
+            self.updatedAt = parse_iso8601(self.updatedAt)
         self.parentId = int(self.parentId) if self.parentId else None
         self.upstreams = [int(_id) for _id in self.upstreams] if self.upstreams else []
-        self.retryAt = parse_iso8601(self.retryAt)  # type: ignore
-        self.startedAt = parse_iso8601(self.startedAt)  # type: ignore
+        if self.retryAt and isinstance(self.retryAt, str):
+            self.retryAt = parse_iso8601(self.retryAt)
+        if self.startedAt and isinstance(self.startedAt, str):
+            self.startedAt = parse_iso8601(self.startedAt)
 
     @property
     def updated_at(self) -> Optional[datetime]:
@@ -75,7 +78,7 @@ class Task(Resource):
 
 
 class TaskEncoder(json.JSONEncoder):
-    def default(self, obj):
+    def default(self, obj: Any) -> Any:
         if isinstance(obj, Task):
             return obj.__dict__
         return json.JSONEncoder.default(self, obj)
