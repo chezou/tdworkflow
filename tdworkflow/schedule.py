@@ -24,12 +24,18 @@ class Schedule(Resource):
 
     def __post_init__(self) -> None:
         self.id = int(self.id)
-        self.project = Project(**self.project)  # type: ignore
-        self.workflow = Workflow(**self.workflow)  # type: ignore
-        self.createdAt = parse_iso8601(self.createdAt)  # type: ignore
-        self.updatedAt = parse_iso8601(self.updatedAt)  # type: ignore
-        self.disabledAt = parse_iso8601(self.disabledAt)  # type: ignore
-        self.nextRunTime = parse_iso8601(self.nextRunTime)  # type: ignore
+        if self.project and isinstance(self.project, dict):
+            self.project = Project(**self.project)
+        if self.workflow and isinstance(self.workflow, dict):
+            self.workflow = Workflow(**self.workflow)
+        if self.createdAt and isinstance(self.createdAt, str):
+            self.createdAt = parse_iso8601(self.createdAt)
+        if self.updatedAt and isinstance(self.updatedAt, str):
+            self.updatedAt = parse_iso8601(self.updatedAt)
+        if self.disabledAt and isinstance(self.disabledAt, str):
+            self.disabledAt = parse_iso8601(self.disabledAt)
+        if self.nextRunTime and isinstance(self.nextRunTime, str):
+            self.nextRunTime = parse_iso8601(self.nextRunTime)
 
     @property
     def created_at(self) -> Optional[datetime]:
@@ -61,6 +67,10 @@ class ScheduleAttempt(Resource):
 
     def __post_init__(self) -> None:
         self.id = int(self.id)
-        self.attempts = [Attempt(**att) for att in self.attempts]  # type: ignore
-        self.project = Project(**self.project)  # type: ignore
-        self.workflow = Project(**self.workflow)  # type: ignore
+        self.attempts = [
+            Attempt(**att) if isinstance(att, dict) else att for att in self.attempts
+        ]
+        if self.project and isinstance(self.project, dict):
+            self.project = Project(**self.project)
+        if self.workflow and isinstance(self.workflow, dict):
+            self.workflow = Workflow(**self.workflow)

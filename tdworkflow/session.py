@@ -20,10 +20,14 @@ class Session(Resource):
 
     def __post_init__(self) -> None:
         self.id = int(self.id)
-        self.project = Project(**self.project)  # type: ignore
-        self.workflow = Workflow(**self.workflow)  # type: ignore
-        self.sessionTime = parse_iso8601(self.sessionTime)  # type: ignore
-        self.lastAttempt = Attempt(**self.lastAttempt)  # type: ignore
+        if self.project and isinstance(self.project, dict):
+            self.project = Project(**self.project)
+        if self.workflow and isinstance(self.workflow, dict):
+            self.workflow = Workflow(**self.workflow)
+        if self.sessionTime and isinstance(self.sessionTime, str):
+            self.sessionTime = parse_iso8601(self.sessionTime)
+        if self.lastAttempt and isinstance(self.lastAttempt, dict):
+            self.lastAttempt = Attempt(**self.lastAttempt)
 
     @property
     def session_uuid(self) -> str:

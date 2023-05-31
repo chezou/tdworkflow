@@ -15,7 +15,8 @@ class Revision(Resource):
     userInfo: Optional[Dict[str, Any]] = None
 
     def __post_init__(self) -> None:
-        self.createdAt = parse_iso8601(self.createdAt)  # type: ignore
+        if self.createdAt and isinstance(self.createdAt, str):
+            self.createdAt = parse_iso8601(self.createdAt)
 
     @property
     def archive_type(self) -> str:
