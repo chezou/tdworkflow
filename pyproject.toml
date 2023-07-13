@@ -1,0 +1,77 @@
+[build-system]
+requires = ["setuptools>=45", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tdworkflow"
+description = "Unofficial Treasure Workflow API client"
+authors = [
+  {name = "Aki Ariga", email = "chezou@gmail.com"}
+]
+maintainers = [
+  {name ="Aki Ariga", email = "chezou@gmail.com"}
+]
+readme = "README.rst"
+license = {file = "LICENSE"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "License :: OSI Approved :: Apache Software License",
+    "Topic :: Database",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+requires-python = ">=3.8"
+dependencies = [
+  "requests",
+  "mypy-extensions",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "pytest-mock",
+  "flake8",
+  "black",
+  "isort",
+  "mypy",
+]
+doc = [
+  "sphinx",
+  "sphinx_rtd_theme",
+]
+
+
+[project.urls]
+"Homepage" = "https://github.com/chezou/tdworkflow"
+"Bug Reports" = "https://github.com/chezou/tdworkflow/issues"
+"Funding" = "https://github.com/sponsors/chezou"
+
+[tool.setuptools.packages]
+find = {}
+
+[tool.setuptools_scm]
+
+
+[tool.isort]
+profile = "black"
+
+[tool.flake8]
+ignore = ["E203", "W503"]
+max-line-length = 88
+exclude = [
+  ".git",
+  ".eggs",
+  "__pycache__",
+  "docs/",
+  "build/",
+  "dist/",
+]
+
+[tool.mypy]
+ignore_missing_imports = true
