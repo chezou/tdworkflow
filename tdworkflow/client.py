@@ -438,7 +438,7 @@ class ProjectAPI:
         if page_size:
             params["page_size"] = page_size
         project_id = project.id if isinstance(project, Project) else project
-        r = cast(ListOfDict, self.get(f"projects/{project_id}/sessions"))
+        r = cast(ListOfDict, self.get(f"projects/{project_id}/sessions", params=params))
         if r:
             return [Session.from_api_repr(**s) for s in r["sessions"]]
         else:
