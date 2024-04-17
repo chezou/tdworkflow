@@ -16,7 +16,7 @@ def archive_files(target_dir: str, exclude_patterns: List[str]) -> io.BytesIO:
 
     target_dir_path = Path(target_dir)
     _bytes = io.BytesIO()
-    with tarfile.open(mode="w:gz", fileobj=_bytes) as tar:
+    with tarfile.open(mode="w:gz", fileobj=_bytes, format=tarfile.GNU_FORMAT) as tar:
         for current_dir, directories, files in os.walk(target_dir_path):
             for file_or_dir in [*directories, *files]:
                 file_path = Path(os.path.join(current_dir, file_or_dir))
