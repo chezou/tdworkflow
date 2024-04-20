@@ -48,13 +48,25 @@ def to_iso8601(dt: Optional[Union[str, datetime]]) -> str:
     if isinstance(dt, datetime):
         # Naive object
         if not dt.tzinfo:
-            return dt.astimezone(timezone(timedelta(0), "UTC")).isoformat()
+            return dt.astimezone(timezone.utc).isoformat()
         # Aware object
         else:
             return dt.isoformat()
 
     elif isinstance(dt, str):
         return dt
+
+    else:
+        raise ValueError("Unexpected type")
+
+
+def to_iso_instant(dt: datetime) -> str:
+    if isinstance(dt, datetime):
+        return (
+            dt.astimezone(timezone.utc)
+            .isoformat(timespec="seconds")
+            .replace("+00:00", "Z")
+        )
 
     else:
         raise ValueError("Unexpected type")

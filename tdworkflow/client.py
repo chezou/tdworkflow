@@ -23,7 +23,7 @@ from .revision import Revision
 from .schedule import Schedule, ScheduleAttempt
 from .session import Session
 from .task import Task
-from .util import archive_files, to_iso8601
+from .util import archive_files, to_iso8601, to_iso_instant
 from .workflow import Workflow
 
 logger = logging.getLogger(__name__)
@@ -102,7 +102,7 @@ class ProjectAPI:
             str,
             DefaultArg(DataType, "data"),
             DefaultArg(Dict[str, Any], "_json"),
-            DefaultArg(Dict[str, str], "params"),
+            DefaultArg(Dict[str, Union[str, List[str]]], "params"),
         ],
         PutResponse,
     ]
@@ -193,6 +193,9 @@ class ProjectAPI:
         self,
         project_name: str,
         target_dir: str,
+        schedule_from: Optional[datetime] = None,
+        clear_schedules: Optional[List[str]] = None,
+        clear_schedule_all: Optional[bool] = None,
         exclude_patterns: Optional[List[str]] = None,
         revision: Optional[str] = None,
     ) -> Project:
@@ -200,6 +203,9 @@ class ProjectAPI:
 
         :param project_name: Project name
         :param target_dir: Target directory name
+        :param schedule_from: Start scheduling of new workflows from the given time instead of current time
+        :param clear_schedules: Clear schedules for the given workflow names
+        :param clear_schedule_all: Clear all schedules
         :param exclude_patterns: Exclude file patterns. They are treated as regexp
                                  patterns.
                                  default: ["venv", ".venv", "__pycache__", ".egg-info",\
@@ -208,7 +214,16 @@ class ProjectAPI:
         :return:
         """
         revision = revision or str(uuid.uuid4())
-        params = {"project": project_name, "revision": revision}
+        params: Dict[str, Union[str, List[str]]] = {
+            "project": project_name,
+            "revision": revision,
+        }
+        if schedule_from:
+            params["schedule_from"] = to_iso_instant(schedule_from)
+        if clear_schedules:
+            params["clear_schedule"] = clear_schedules
+        if clear_schedule_all:
+            params["clear_schedule_all"] = "true"
 
         default_excludes = [
             "venv",
@@ -452,7 +467,7 @@ class AttemptAPI:
             str,
             DefaultArg(DataType, "data"),
             DefaultArg(Dict[str, Any], "_json"),
-            DefaultArg(Dict[str, str], "params"),
+            DefaultArg(Dict[str, Union[str, List[str]]], "params"),
         ],
         PutResponse,
     ]
@@ -1038,7 +1053,7 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         path: str,
         data: Optional[DataType] = None,
         _json: Optional[Dict[str, Any]] = None,
-        params: Optional[Dict[str, str]] = None,
+        params: Optional[Dict[str, Union[str, List[str]]]] = None,
     ) -> PutResponse:
         """PUT operator for REST API
 
