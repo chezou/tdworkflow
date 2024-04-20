@@ -204,8 +204,8 @@ class ProjectAPI:
         :param project_name: Project name
         :param target_dir: Target directory name
         :param schedule_from: Start scheduling of new workflows from the given time instead of current time
-        :param clear_schedules: Clear schedules for the given workflow names
-        :param clear_schedule_all: Clear all schedules
+        :param clear_schedules: Clear last_session_time info for schedules of the for the given workflow names
+        :param clear_schedule_all: Clear last_session_time info for all schedules
         :param exclude_patterns: Exclude file patterns. They are treated as regexp
                                  patterns.
                                  default: ["venv", ".venv", "__pycache__", ".egg-info",\
