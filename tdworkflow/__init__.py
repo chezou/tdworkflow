@@ -1,6 +1,5 @@
 import logging
-
-import pkg_resources
+from importlib.metadata import PackageNotFoundError, version
 
 from . import (
     attempt,
@@ -15,8 +14,8 @@ from . import (
 )
 
 try:
-    __version__ = pkg_resources.get_distribution(__name__).version
-except pkg_resources.DistributionNotFound:
+    __version__ = version("tdworkflow")
+except PackageNotFoundError:
     # package is not installed
     pass
 
