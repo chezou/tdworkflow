@@ -1,6 +1,7 @@
 import copy
 import datetime
 import io
+import json
 
 import pytest
 import requests
@@ -708,6 +709,26 @@ class TestAttemptAPI:
         a = RESP_DATA_GET_6["attempts"][0]
         prepare_mock(self.client, mocker, a, method="put", content=b"abc", json=True)
         attempt = self.client.start_attempt(a["id"])
+        assert Attempt(**a) == attempt
+
+    def test_start_attempt_with_pool_id(self, mocker):
+        a = RESP_DATA_GET_6["attempts"][0]
+        mock_http = mocker.MagicMock()
+        self.client._http = mock_http
+        response = mock_http.put.return_value
+        response.status_code = 200
+        response.json.return_value = a
+        response.headers = {"Content-Type": "application/json"}
+        response.content = json.dumps(a).encode()
+
+        attempt = self.client.start_attempt(a["id"], pool_id=123)
+
+        # Verify the API was called with poolId in the parameters
+        call_args = mock_http.put.call_args
+        assert call_args is not None
+        data_str = call_args[1]["data"]
+        json_data = json.loads(data_str)
+        assert json_data["poolId"] == 123
         assert Attempt(**a) == attempt
 
     def test_kill_attempt(self, mocker):

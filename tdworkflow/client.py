@@ -575,6 +575,7 @@ class AttemptAPI:
         session_time: Optional[str] = None,
         retry_attempt_name: Optional[str] = None,
         workflow_params: Optional[Dict[str, Any]] = None,
+        pool_id: Optional[int] = None,
     ) -> Attempt:
         """Start workflow session
 
@@ -582,6 +583,7 @@ class AttemptAPI:
         :param session_time: Session time, optional Default: ``datetime.datetime.now()``
         :param retry_attempt_name: Retry attempt name, optional
         :param workflow_params: Extra workflow parameters
+        :param pool_id: Pool ID for workflow execution, optional
         :return:
         """
         workflow_id = workflow.id if isinstance(workflow, Workflow) else workflow
@@ -592,6 +594,8 @@ class AttemptAPI:
             session_time = to_iso8601(datetime.now())
         if retry_attempt_name:
             _params.update({"retryAttemptName": retry_attempt_name})
+        if pool_id is not None:
+            _params.update({"poolId": pool_id})
 
         _params["sessionTime"] = session_time
         r = self.put("attempts", _json=_params)
