@@ -154,6 +154,7 @@ RESP_DATA_GET_6 = {
             "createdAt": "2019-11-01T07:00:00Z",
             "finishedAt": "2019-11-01T07:06:38Z",
             "status": "running",
+            "poolId": "123",
         }
     ]
 }
