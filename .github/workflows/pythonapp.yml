@@ -1,6 +1,9 @@
 name: Python application
 
-on: [push]
+on:
+  push:
+    branches: [master]
+  pull_request:
 
 jobs:
   build:
@@ -10,20 +13,20 @@ jobs:
         os: [ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v4
+    - uses: actions/checkout@v6
       with:
+        fetch-depth: 0  # Full git history for setuptools_scm
+    - name: Install uv and set the Python version
+      uses: astral-sh/setup-uv@v7
+      with:
+        enable-cache: true
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e .[dev]
+      run: uv sync --extra dev
     - name: Lint
       run: |
-        black --diff --check tdworkflow tests
-        isort --check-only tdworkflow tests
-        mypy --install-types --non-interactive tdworkflow
+        uv run ruff check tdworkflow tests
+        uv run ruff format --check tdworkflow tests
+        uv run mypy --install-types --non-interactive tdworkflow
     - name: Test with pytest
-      run: |
-        pytest
+      run: uv run pytest

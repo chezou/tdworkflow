@@ -1,6 +1,6 @@
 import dataclasses
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 from .project import Project
 from .resource import Resource
@@ -13,17 +13,17 @@ class Attempt(Resource):
     id: int
     sessionId: int = -1
     sessionUuid: str = ""
-    sessionTime: Optional[datetime] = None
-    workflow: Optional[Workflow] = None
-    project: Optional[Project] = None
+    sessionTime: datetime | None = None
+    workflow: Workflow | None = None
+    project: Project | None = None
     index: int = -1
     retryAttemptName: str = ""
     done: bool = False
     success: bool = False
     cancelRequested: bool = False
-    params: Optional[Dict[str, Any]] = None
-    createdAt: Optional[datetime] = None
-    finishedAt: Optional[datetime] = None
+    params: dict[str, Any] | None = None
+    createdAt: datetime | None = None
+    finishedAt: datetime | None = None
     status: str = ""
 
     def __post_init__(self) -> None:
@@ -52,7 +52,7 @@ class Attempt(Resource):
         return self.sessionUuid
 
     @property
-    def session_time(self) -> Optional[datetime]:
+    def session_time(self) -> datetime | None:
         return self.sessionTime
 
     @property
@@ -64,7 +64,7 @@ class Attempt(Resource):
         return self.cancelRequested
 
     @property
-    def finished_at(self) -> Optional[datetime]:
+    def finished_at(self) -> datetime | None:
         return self.finishedAt
 
     def finished(self) -> bool:

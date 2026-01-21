@@ -1,6 +1,6 @@
 import dataclasses
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 from .resource import Resource
 from .util import parse_iso8601
@@ -9,10 +9,10 @@ from .util import parse_iso8601
 @dataclasses.dataclass
 class Revision(Resource):
     revision: str
-    createdAt: Optional[datetime] = None
+    createdAt: datetime | None = None
     archiveType: str = ""
     archiveMd5: str = ""
-    userInfo: Optional[Dict[str, Any]] = None
+    userInfo: dict[str, Any] | None = None
 
     def __post_init__(self) -> None:
         if self.createdAt and isinstance(self.createdAt, str):
@@ -27,5 +27,5 @@ class Revision(Resource):
         return self.archive_md5
 
     @property
-    def created_at(self) -> Optional[datetime]:
+    def created_at(self) -> datetime | None:
         return self.createdAt

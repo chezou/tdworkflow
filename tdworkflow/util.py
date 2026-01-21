@@ -3,14 +3,13 @@ import logging
 import os
 import re
 import tarfile
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Optional, Union
 
 logger = logging.getLogger(__name__)
 
 
-def archive_files(target_dir: str, exclude_patterns: List[str]) -> io.BytesIO:
+def archive_files(target_dir: str, exclude_patterns: list[str]) -> io.BytesIO:
     _partial = r")|(".join(exclude_patterns)
     pattern = rf"({_partial})"
 
@@ -34,14 +33,14 @@ def archive_files(target_dir: str, exclude_patterns: List[str]) -> io.BytesIO:
     return _bytes
 
 
-def parse_iso8601(target: Optional[str]) -> Optional[datetime]:
+def parse_iso8601(target: str | None) -> datetime | None:
     if not target:
         return None
 
     return datetime.fromisoformat(target.replace("Z", "+00:00"))
 
 
-def to_iso8601(dt: Optional[Union[str, datetime]]) -> str:
+def to_iso8601(dt: str | datetime | None) -> str:
     if not dt:
         return ""
 

@@ -1,6 +1,6 @@
 import dataclasses
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 from .project import Project
 from .resource import Resource
@@ -11,13 +11,13 @@ from .util import parse_iso8601
 class Workflow(Resource):
     id: int
     name: str
-    project: Optional[Project] = None
+    project: Project | None = None
     timezone: str = ""
-    config: Optional[Dict[str, Any]] = None
+    config: dict[str, Any] | None = None
     revision: str = ""
-    createdAt: Optional[datetime] = None
-    deletedAt: Optional[datetime] = None
-    updatedAt: Optional[datetime] = None
+    createdAt: datetime | None = None
+    deletedAt: datetime | None = None
+    updatedAt: datetime | None = None
 
     def __post_init__(self) -> None:
         self.id = int(self.id)
@@ -31,13 +31,13 @@ class Workflow(Resource):
             self.updatedAt = parse_iso8601(self.updatedAt)
 
     @property
-    def created_at(self) -> Optional[datetime]:
+    def created_at(self) -> datetime | None:
         return self.createdAt
 
     @property
-    def deleted_at(self) -> Optional[datetime]:
+    def deleted_at(self) -> datetime | None:
         return self.deletedAt
 
     @property
-    def updated_at(self) -> Optional[datetime]:
+    def updated_at(self) -> datetime | None:
         return self.updatedAt

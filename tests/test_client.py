@@ -385,7 +385,7 @@ def test_create_client_with_scheme():
 
 class TestProjectAPI:
     def setup_method(self, method):
-        print("method{}".format(method.__name__))
+        print(f"method{method.__name__}")
         self.client = Client(site="us", apikey="APIKEY")
 
     def test_projects(self, mocker):
@@ -514,7 +514,7 @@ class TestProjectAPI:
 
 class TestWorkflowAPI:
     def setup_method(self, method):
-        print("method{}".format(method.__name__))
+        print(f"method{method.__name__}")
         self.client = Client(site="us", apikey="APIKEY")
 
     def test_workflows(self, mocker):
@@ -547,7 +547,7 @@ class TestWorkflowAPI:
 
 class TestScheduleAPI:
     def setup_method(self, method):
-        print("method{}".format(method.__name__))
+        print(f"method{method.__name__}")
         self.client = Client(site="us", apikey="APIKEY")
 
     def test_schedules(self, mocker):
@@ -625,7 +625,7 @@ class TestScheduleAPI:
 
 class TestSessionAPI:
     def setup_method(self, method):
-        print("method{}".format(method.__name__))
+        print(f"method{method.__name__}")
         self.client = Client(site="us", apikey="APIKEY")
 
     def test_sessions(self, mocker):
@@ -648,14 +648,14 @@ class TestSessionAPI:
 
 class TestLogAPI:
     def setup_method(self, method):
-        print("method{}".format(method.__name__))
+        print(f"method{method.__name__}")
         self.client = Client(site="us", apikey="APIKEY")
 
     def test_log_files(self, mocker):
         attempt = RESP_DATA_GET_6["attempts"][0]
         prepare_mock(self.client, mocker, ret_json=RESP_DATA_GET_7)
         files = self.client.log_files(int(attempt["id"]))
-        assert [LogFile(**l) for l in RESP_DATA_GET_7["files"]] == files
+        assert [LogFile(**log_file) for log_file in RESP_DATA_GET_7["files"]] == files
 
     def test_log_file(self, mocker):
         import gzip
@@ -674,7 +674,7 @@ class TestLogAPI:
 
 class TestAttemptAPI:
     def setup_method(self, method):
-        print("method{}".format(method.__name__))
+        print(f"method{method.__name__}")
         self.client = Client(site="us", apikey="APIKEY")
 
     def test_attemtps(self, mocker):
