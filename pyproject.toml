@@ -77,6 +77,8 @@ ignore = ["E203"]  # Match current flake8 ignores (W503 is not needed in ruff)
 quote-style = "double"
 indent-style = "space"
 
+[tool.ty]
+
 [tool.ty.rules]
 # Configure ty to be more lenient initially for gradual migration
 invalid-argument-type = "ignore"

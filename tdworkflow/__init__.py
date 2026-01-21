@@ -33,7 +33,7 @@ try:
     __version__ = version("tdworkflow")
 except PackageNotFoundError:
     # package is not installed
-    pass
+    __version__ = "0.0.0+unknown"
 
 
 logger = logging.getLogger(__name__)

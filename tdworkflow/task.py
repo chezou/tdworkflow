@@ -78,7 +78,7 @@ class Task(Resource):
 
 
 class TaskEncoder(json.JSONEncoder):
-    def default(self, obj: Any) -> Any:
-        if isinstance(obj, Task):
-            return obj.__dict__
-        return json.JSONEncoder.default(self, obj)
+    def default(self, o: Any) -> Any:
+        if isinstance(o, Task):
+            return o.__dict__
+        return json.JSONEncoder.default(self, o)

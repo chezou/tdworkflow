@@ -7,7 +7,7 @@ import time
 import uuid
 from collections.abc import Callable
 from datetime import datetime
-from typing import Any, BinaryIO, cast
+from typing import Any, BinaryIO, Literal, cast, overload
 
 import requests
 from mypy_extensions import DefaultArg
@@ -523,6 +523,14 @@ class AttemptAPI:
         )
         return res
 
+    @overload
+    def attempt(
+        self, attempt: int | Attempt, inplace: Literal[False] = False
+    ) -> Attempt: ...
+
+    @overload
+    def attempt(self, attempt: Attempt, inplace: Literal[True]) -> None: ...
+
     def attempt(self, attempt: int | Attempt, inplace: bool = False) -> Attempt | None:
         """Get an attempt
 
@@ -605,6 +613,14 @@ class AttemptAPI:
         else:
             raise ValueError("Unable to start attempt")
 
+    @overload
+    def kill_attempt(
+        self, attempt: int | Attempt, inplace: Literal[False] = False
+    ) -> Attempt: ...
+
+    @overload
+    def kill_attempt(self, attempt: Attempt, inplace: Literal[True]) -> None: ...
+
     def kill_attempt(
         self, attempt: int | Attempt, inplace: bool = False
     ) -> Attempt | None:
@@ -619,6 +635,8 @@ class AttemptAPI:
         attempt_id = attempt.id if isinstance(attempt, Attempt) else attempt
         self.post(f"attempts/{attempt_id}/kill", content=True)
         if inplace:
+            if isinstance(attempt, int):
+                raise ValueError(f"Unable to use inplace with integer value {attempt=}")
             self.attempt(attempt, inplace=True)
             return None
         else:
@@ -635,7 +653,7 @@ class AttemptAPI:
         :rtype: Attempt
         """
         if isinstance(attempt, int):
-            attempt = cast(Attempt, self.attempt(attempt))
+            attempt = self.attempt(attempt)
 
         while not attempt.done:
             time.sleep(wait_interval)
@@ -1077,7 +1095,7 @@ class Client(AttemptAPI, WorkflowAPI, ProjectAPI, ScheduleAPI, SessionAPI, LogAP
         if not _json and data and hasattr(data, "read"):
             headers["Content-Type"] = "application/gzip"
 
-        r = self.http.put(url, data=data, headers=headers, params=params)  # type: ignore
+        r = self.http.put(url, data=data, headers=headers, params=params)
         logger.debug(f"{r.status_code!r}\n{r.content!r}")
 
         if not 200 <= r.status_code < 300:
