@@ -27,6 +27,6 @@ jobs:
       run: |
         uv run ruff check tdworkflow tests
         uv run ruff format --check tdworkflow tests
-        uv run mypy --install-types --non-interactive tdworkflow
+        uv run ty check tdworkflow
     - name: Test with pytest
       run: uv run pytest
