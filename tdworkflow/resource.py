@@ -11,7 +11,7 @@ class Resource:
     @classmethod
     def from_api_repr(cls: type[T], **resource: Any) -> T:
         # https://github.com/python/mypy/issues/14941
-        known_fields = {e.name for e in dataclasses.fields(cls)}  # type: ignore
+        known_fields = {e.name for e in dataclasses.fields(cls)}
         original_values = {}
         for name in resource:
             if name in known_fields:

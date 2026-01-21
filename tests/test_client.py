@@ -738,6 +738,7 @@ class TestAttemptAPI:
         prepare_mock(self.client, mocker, a, mock=False)
         attempt = self.client.kill_attempt(a["id"])
         assert Attempt(**a) == attempt
+        assert attempt is not None
         assert attempt.cancel_requested is True
 
     def test_unknown_field(self, mocker):
