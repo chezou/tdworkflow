@@ -25,6 +25,7 @@ class Attempt(Resource):
     createdAt: datetime | None = None
     finishedAt: datetime | None = None
     status: str = ""
+    poolId: str | None = None
 
     def __post_init__(self) -> None:
         self.id = int(self.id)
@@ -67,6 +68,10 @@ class Attempt(Resource):
     def finished_at(self) -> datetime | None:
         return self.finishedAt
 
+    @property
+    def pool_id(self) -> str | None:
+        return self.poolId
+
     def finished(self) -> bool:
         return bool(self.finished_at)
 
@@ -86,3 +91,4 @@ class Attempt(Resource):
         self.createdAt = other_attempt.createdAt
         self.finishedAt = other_attempt.finishedAt
         self.status = other_attempt.status
+        self.poolId = other_attempt.poolId
