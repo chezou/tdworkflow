@@ -65,7 +65,7 @@ class WorkflowAPI:
         :return: List of Workflow
         :rtype: List[Workflow]
         """
-        params = {}  # type: Dict[str, Union[str, bool, int, None]]
+        params: Params = {}
         if name_pattern:
             params["name_pattern"] = name_pattern
         if search_project_name:
@@ -141,7 +141,7 @@ class ProjectAPI:
         :return: List of Project
         :rtype: List[Project]
         """
-        params = {}  # type: Dict[str, Union[str, int, None]]
+        params: Params = {}
         if name:
             params["name"] = name
         if name_pattern:
@@ -174,7 +174,7 @@ class ProjectAPI:
         :return: List of Workflow
         :rtype: List[Workflow]
         """
-        params = {}  # type: Dict[str, Union[str, int, None]]
+        params: Params = {}
         if workflow:
             workflow_name = (
                 workflow.name if isinstance(workflow, Workflow) else workflow
@@ -327,7 +327,7 @@ class ProjectAPI:
         :param last_id: List schedules whose id is grater than this id for pagination
         :return: List of Schedule
         """
-        params = {}  # type: Dict[str, Union[str, int, None]]
+        params: Params = {}
         if workflow:
             workflow_name = (
                 workflow.name if isinstance(workflow, Workflow) else workflow
@@ -445,7 +445,7 @@ class ProjectAPI:
         :param page_size: Number of sessions to return
         :return: List of Session
         """
-        params = {}  # type: Dict[str, Union[str, int, None]]
+        params: Params = {}
         if workflow:
             workflow_name = (
                 workflow.name if isinstance(workflow, Workflow) else workflow
@@ -501,7 +501,7 @@ class AttemptAPI:
         :return: List of Attempt object
         :rtype: List[Attempt]
         """
-        params = {}  # type: Dict[str, Union[str, bool, int, None]]
+        params: Params = {}
         if project:
             project_name = project.name if isinstance(project, Project) else project
             params.update({"project": project_name})
@@ -588,7 +588,7 @@ class AttemptAPI:
         :return:
         """
         workflow_id = workflow.id if isinstance(workflow, Workflow) else workflow
-        _params = {"workflowId": workflow_id}  # type: Dict[str, Any]
+        _params: dict[str, Any] = {"workflowId": workflow_id}
         workflow_params = workflow_params if workflow_params else {}
         _params.update({"params": workflow_params})
         if not session_time:
@@ -693,7 +693,7 @@ class ScheduleAPI:
         :param count: Count
         :return: ScheduleAttempt
         """
-        params = {}  # type: Dict[str, Union[str, int, None]]
+        params: Params = {}
         if from_time:
             params["fromTime"] = to_iso8601(from_time)
         if attempt_name:
@@ -754,7 +754,7 @@ class ScheduleAPI:
         :param dry_run: Flag for dry run
         :return: New Schedule
         """
-        params = {}  # type: Dict[str, Union[str, datetime, bool, None]]
+        params: Params = {}
         if from_time:
             params["fromTime"] = to_iso8601(from_time)
         if next_time:
@@ -784,7 +784,7 @@ class SessionAPI:
         :param page_size: Number of sessions to return
         :return: List of Session
         """
-        params = {}  # type: Params
+        params: Params = {}
         if last_id:
             params["last_id"] = last_id
         if page_size:
@@ -822,7 +822,7 @@ class SessionAPI:
         :param page_size: Number of attempts to return
         :return: List of Attempt
         """
-        params = {}  # type: Params
+        params: Params = {}
         if last_id:
             params["last_id"] = last_id
         if page_size:
@@ -854,7 +854,7 @@ class LogAPI:
         :param direct_download: Flag for direct download
         :return: List of LogFile
         """
-        params = {}  # type: Dict[str, Union[int, str, bool, None]]
+        params: dict[str, int | str | bool | None] = {}
         if task:
             params["task"] = task
         if direct_download:
