@@ -1,7 +1,7 @@
 import dataclasses
 import json
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from .resource import Resource
 from .util import parse_iso8601
@@ -11,17 +11,17 @@ from .util import parse_iso8601
 class Task(Resource):
     id: int
     state: str
-    updatedAt: Optional[datetime] = None
+    updatedAt: datetime | None = None
     fullName: str = ""
-    parentId: Optional[int] = None
-    upstreams: Optional[List[int]] = None
-    retryAt: Optional[datetime] = None
-    config: Optional[Dict[str, Any]] = None
-    exportParams: Optional[Dict[str, Any]] = None
-    storeParams: Optional[Dict[str, Any]] = None
-    stateParams: Optional[Dict[str, Any]] = None
-    error: Optional[Dict[str, Any]] = None
-    startedAt: Optional[datetime] = None
+    parentId: int | None = None
+    upstreams: list[int] | None = None
+    retryAt: datetime | None = None
+    config: dict[str, Any] | None = None
+    exportParams: dict[str, Any] | None = None
+    storeParams: dict[str, Any] | None = None
+    stateParams: dict[str, Any] | None = None
+    error: dict[str, Any] | None = None
+    startedAt: datetime | None = None
     cancelRequested: bool = False
     isGroup: bool = False
 
@@ -37,7 +37,7 @@ class Task(Resource):
             self.startedAt = parse_iso8601(self.startedAt)
 
     @property
-    def updated_at(self) -> Optional[datetime]:
+    def updated_at(self) -> datetime | None:
         return self.updatedAt
 
     @property
@@ -45,27 +45,27 @@ class Task(Resource):
         return self.fullName
 
     @property
-    def parent_id(self) -> Optional[int]:
+    def parent_id(self) -> int | None:
         return self.parentId
 
     @property
-    def retry_at(self) -> Optional[datetime]:
+    def retry_at(self) -> datetime | None:
         return self.retryAt
 
     @property
-    def export_params(self) -> Optional[Dict[str, Any]]:
+    def export_params(self) -> dict[str, Any] | None:
         return self.exportParams
 
     @property
-    def store_params(self) -> Optional[Dict[str, Any]]:
+    def store_params(self) -> dict[str, Any] | None:
         return self.storeParams
 
     @property
-    def state_params(self) -> Optional[Dict[str, Any]]:
+    def state_params(self) -> dict[str, Any] | None:
         return self.stateParams
 
     @property
-    def started_at(self) -> Optional[datetime]:
+    def started_at(self) -> datetime | None:
         return self.startedAt
 
     @property

@@ -1,6 +1,6 @@
 import dataclasses
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
 
 from .attempt import Attempt
 from .project import Project
@@ -8,7 +8,7 @@ from .resource import Resource
 from .util import parse_iso8601
 from .workflow import Workflow
 
-NextSchedule = Dict[str, Union[int, str, Dict[str, Any]]]
+NextSchedule = dict[str, int | str | dict[str, Any]]
 
 
 @dataclasses.dataclass
@@ -16,11 +16,11 @@ class Schedule(Resource):
     id: int
     project: Project
     workflow: Workflow
-    createdAt: Optional[datetime] = None
-    updatedAt: Optional[datetime] = None
-    disabledAt: Optional[datetime] = None
-    nextScheduleTime: Optional[NextSchedule] = None
-    nextRunTime: Optional[datetime] = None
+    createdAt: datetime | None = None
+    updatedAt: datetime | None = None
+    disabledAt: datetime | None = None
+    nextScheduleTime: NextSchedule | None = None
+    nextRunTime: datetime | None = None
 
     def __post_init__(self) -> None:
         self.id = int(self.id)
@@ -38,32 +38,32 @@ class Schedule(Resource):
             self.nextRunTime = parse_iso8601(self.nextRunTime)
 
     @property
-    def created_at(self) -> Optional[datetime]:
+    def created_at(self) -> datetime | None:
         return self.createdAt
 
     @property
-    def updated_at(self) -> Optional[datetime]:
+    def updated_at(self) -> datetime | None:
         return self.updatedAt
 
     @property
-    def disabled_at(self) -> Optional[datetime]:
+    def disabled_at(self) -> datetime | None:
         return self.disabledAt
 
     @property
-    def next_run_time(self) -> Optional[datetime]:
+    def next_run_time(self) -> datetime | None:
         return self.nextRunTime
 
     @property
-    def next_schedule_time(self) -> Optional[NextSchedule]:
+    def next_schedule_time(self) -> NextSchedule | None:
         return self.nextScheduleTime
 
 
 @dataclasses.dataclass
 class ScheduleAttempt(Resource):
     id: int
-    attempts: List[Attempt]
-    project: Optional[Project] = None
-    workflow: Optional[Workflow] = None
+    attempts: list[Attempt]
+    project: Project | None = None
+    workflow: Workflow | None = None
 
     def __post_init__(self) -> None:
         self.id = int(self.id)

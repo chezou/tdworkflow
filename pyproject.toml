@@ -37,10 +37,8 @@ dynamic = ["version"]
 dev = [
   "pytest",
   "pytest-mock",
-  "flake8",
-  "black",
-  "isort",
-  "mypy",
+  "ruff",
+  "ty",
 ]
 doc = [
   "sphinx",
@@ -58,21 +56,33 @@ find = {}
 
 [tool.setuptools_scm]
 
+[tool.uv]
+cache-keys = [{ file = "pyproject.toml" }, { git = true }]
 
-[tool.isort]
-profile = "black"
+[tool.ruff]
+line-length = 88
+target-version = "py310"
 
-[tool.flake8]
-ignore = ["E203", "W503"]
-max-line-length = 88
-exclude = [
-  ".git",
-  ".eggs",
-  "__pycache__",
-  "docs/",
-  "build/",
-  "dist/",
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "UP",   # pyupgrade - modernize Python code
 ]
+ignore = ["E203"]  # Match current flake8 ignores (W503 is not needed in ruff)
 
-[tool.mypy]
-ignore_missing_imports = true
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.ty.rules]
+# Configure ty to be more lenient initially for gradual migration
+invalid-argument-type = "ignore"
+invalid-method-override = "ignore"
+invalid-type-form = "ignore"  # DefaultArg from mypy-extensions not supported
+missing-argument = "ignore"  # Related to DefaultArg usage
+unknown-argument = "ignore"  # Related to DefaultArg usage
+possibly-missing-attribute = "warn"  # Warn but don't error
+unused-ignore-comment = "warn"  # Warn but don't error

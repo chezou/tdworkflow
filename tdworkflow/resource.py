@@ -1,6 +1,6 @@
 import dataclasses
 import logging
-from typing import Any, Type, TypeVar
+from typing import Any, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -9,7 +9,7 @@ T = TypeVar("T", bound="Resource")
 
 class Resource:
     @classmethod
-    def from_api_repr(cls: Type[T], **resource: Any) -> T:
+    def from_api_repr(cls: type[T], **resource: Any) -> T:
         # https://github.com/python/mypy/issues/14941
         known_fields = {e.name for e in dataclasses.fields(cls)}  # type: ignore
         original_values = {}

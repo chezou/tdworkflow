@@ -1,6 +1,6 @@
 import dataclasses
 from datetime import datetime
-from typing import Any, Dict, Optional
+from typing import Any
 
 from .resource import Resource
 from .util import parse_iso8601
@@ -10,10 +10,10 @@ from .util import parse_iso8601
 class LogFile(Resource):
     fileName: str
     taskName: str
-    direct: Dict[Any, Any]
+    direct: dict[Any, Any]
     fileSize: int
     agentId: str
-    fileTime: Optional[datetime] = None
+    fileTime: datetime | None = None
 
     def __post_init__(self) -> None:
         if self.fileTime and isinstance(self.fileTime, str):
@@ -28,7 +28,7 @@ class LogFile(Resource):
         return self.taskName
 
     @property
-    def file_time(self) -> Optional[datetime]:
+    def file_time(self) -> datetime | None:
         return self.fileTime
 
     @property

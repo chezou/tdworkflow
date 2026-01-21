@@ -1,6 +1,5 @@
 import dataclasses
 from datetime import datetime
-from typing import Optional
 
 from .resource import Resource
 from .util import parse_iso8601
@@ -13,9 +12,9 @@ class Project(Resource):
     revision: str = ""
     archiveType: str = ""
     archiveMd5: str = ""
-    createdAt: Optional[datetime] = None
-    deletedAt: Optional[datetime] = None
-    updatedAt: Optional[datetime] = None
+    createdAt: datetime | None = None
+    deletedAt: datetime | None = None
+    updatedAt: datetime | None = None
 
     def __post_init__(self) -> None:
         self.id = int(self.id)
@@ -35,13 +34,13 @@ class Project(Resource):
         return self.archive_md5
 
     @property
-    def created_at(self) -> Optional[datetime]:
+    def created_at(self) -> datetime | None:
         return self.createdAt
 
     @property
-    def deleted_at(self) -> Optional[datetime]:
+    def deleted_at(self) -> datetime | None:
         return self.deletedAt
 
     @property
-    def updated_at(self) -> Optional[datetime]:
+    def updated_at(self) -> datetime | None:
         return self.updatedAt

@@ -1,4 +1,4 @@
-from typing import NoReturn, Union
+from typing import NoReturn
 
 import requests
 
@@ -7,7 +7,7 @@ class HttpError(Exception):
     pass
 
 
-def raise_response_error(r: requests.Response) -> Union[NoReturn, None]:
+def raise_response_error(r: requests.Response) -> NoReturn | None:
     try:
         r.raise_for_status()
         return None
